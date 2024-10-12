@@ -83,7 +83,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   onPressed: () {
                     // Handle sign up action
-                    Navigator.pushNamed(context, '/signup'); // Navigate to signup page
+                    Navigator.pushNamed(context, '/sign_up_screen'); // Navigate to signup page
                   },
                   child: Text(
                     'Sign Up',
