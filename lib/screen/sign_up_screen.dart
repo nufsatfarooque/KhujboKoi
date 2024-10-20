@@ -97,7 +97,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       onPressed: () {
                         Navigator.pushNamed(
                           context,
-                          '/home',
+                          '/bottom_nav',
                         );
                         // Handle sign-up logic here
                       },

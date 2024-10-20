@@ -4,7 +4,8 @@ import '../screen/sign_up_screen.dart';
 import '../screen/login_screen.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  final VoidCallback onLoginPress;
+  const HomePage({Key? key, required this.onLoginPress}) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -22,15 +23,10 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-  int myindex=0;
-  List<Widget> screens=const[
-     SignUpScreen(),
-     LoginScreen(),
-  ];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return SafeArea(child: Scaffold(
       appBar: AppBar(
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -53,7 +49,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(15.0),
+        padding: const EdgeInsets.all(25.0),
 
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,16 +93,18 @@ class _HomePageState extends State<HomePage> {
             ),
 
             TextButton(
-              onPressed: () {
+              onPressed: widget.onLoginPress,
+              /*onPressed: () {
+                Navigator.pushNamed(context, '/login_screen');
                 // Handle view latest notices action
-              },
+              },*/
               child: const Text('View Latest Notices'),
             ),
           ],
         ),
 
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      /*bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.shifting,
         selectedItemColor: Colors.green,
         unselectedItemColor: Colors.grey,
@@ -134,8 +132,9 @@ class _HomePageState extends State<HomePage> {
             label: 'Account',
           ),
         ],
-      ),
+      ),*/
 
+    ),
     );
   }
 }

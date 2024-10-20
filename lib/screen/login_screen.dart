@@ -56,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: true,
                     ),
                     const SizedBox(height: 32),
-                    ElevatedButton(
+                    ElevatedButton(   //login button
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16.0),
                         backgroundColor: Colors.green,
@@ -67,7 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () {
                         Navigator.pushNamed(
                           context,
-                          '/home',
+                          '/bottom_nav',
                         );
                         // Handle sign-up logic here
                       },
