@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+//import 'package:cloud_firestore/cloud_firestore.dart';
 
 class NoticeBoardScreen extends StatefulWidget {
   @override
@@ -20,6 +20,7 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
       ),
     );
   }
+  /*
   void _addNotice() {
     // Add notice logic goes here
     print("Add Notice clicked");
@@ -45,7 +46,7 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
         isLiked = false; // Reset like if dislike is selected
       }
     });
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -71,8 +72,9 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
           ),
         ],
       ),
+
       body: Padding(
-        padding: const EdgeInsets.all(15.0),
+        padding: const EdgeInsets.all(15.0)/*,
         child: Column(
           children: [
             // Add Notice Button
@@ -173,7 +175,7 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
               ),
             ),
           ],
-        ),
+        )*/,
       ),
     ),
     );

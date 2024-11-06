@@ -1,4 +1,4 @@
-package com.example.khujbokoi;
+package com.khujbokoi.app;
 
 import io.flutter.embedding.android.FlutterActivity;
 
