@@ -6,6 +6,18 @@
   },
   "client": [
     {
+      "client_info": {
+        "mobilesdk_app_id": "1:582973375044:android:3856e000bfc37f7e2b3211",
+        "android_client_info": {
+          "package_name": "com.khujbokoi.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiyyQfgz9aHSgkPhI4fGEUhKwbE1B5wEc"
+        }
+      ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": []
