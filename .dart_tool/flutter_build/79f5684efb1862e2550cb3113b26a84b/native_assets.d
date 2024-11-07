@@ -1,0 +1,1 @@
+ D:\\Sofftawer\\FlutterInstall\\New\ folder\\.dart_tool\\flutter_build\\79f5684efb1862e2550cb3113b26a84b\\native_assets.yaml: 
