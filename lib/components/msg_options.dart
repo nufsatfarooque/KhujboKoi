@@ -1,0 +1,53 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:khujbokoi/services/database.dart';
+import 'package:flutter/material.dart';
+import 'package:khujbokoi/screen/notice.dart';
+class MsgOptions extends StatelessWidget {
+  
+  
+  final String messageId;
+  final String currentUser;
+  
+  final dynamic msgUserName;
+
+  const MsgOptions({super.key, required this.messageId,required this.currentUser,required this.msgUserName});
+
+   
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        //1st msg option
+        if( currentUser ==msgUserName)
+        ElevatedButton(
+          onPressed: (){
+            DatabaseService().deleteMessage(messageId);
+            Navigator.pop(context);
+          }, 
+          child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.delete),
+                const SizedBox(width: 8),
+                const Text("Delete"),
+              ],
+          ),
+          
+          ),
+        ElevatedButton(
+          onPressed: (){}, 
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+                const Icon(Icons.report),
+                const SizedBox(width: 8,),
+                const Text("Report"),
+            ],
+          ),
+        ),
+         
+      ],
+    );
+  }
+}

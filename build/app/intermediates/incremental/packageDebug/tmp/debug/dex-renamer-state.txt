@@ -1,9 +1,9 @@
-#Wed Nov 06 19:12:53 BDT 2024
-base.0=D\:\\Sofftawer\\FlutterInstall\\New folder\\build\\app\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
-base.1=D\:\\Sofftawer\\FlutterInstall\\New folder\\build\\app\\intermediates\\dex\\debug\\mergeLibDexDebug\\0\\classes.dex
-base.2=D\:\\Sofftawer\\FlutterInstall\\New folder\\build\\app\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
-base.3=D\:\\Sofftawer\\FlutterInstall\\New folder\\build\\app\\intermediates\\dex\\debug\\mergeProjectDexDebug\\10\\classes.dex
-base.4=D\:\\Sofftawer\\FlutterInstall\\New folder\\build\\app\\intermediates\\dex\\debug\\mergeProjectDexDebug\\1\\classes.dex
+#Sat Nov 09 20:53:57 BDT 2024
+base.0=D\:\\KhujboKoi_NufsatsRepo\\build\\app\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
+base.1=D\:\\KhujboKoi_NufsatsRepo\\build\\app\\intermediates\\dex\\debug\\mergeLibDexDebug\\0\\classes.dex
+base.2=D\:\\KhujboKoi_NufsatsRepo\\build\\app\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
+base.3=D\:\\KhujboKoi_NufsatsRepo\\build\\app\\intermediates\\dex\\debug\\mergeProjectDexDebug\\10\\classes.dex
+base.4=D\:\\KhujboKoi_NufsatsRepo\\build\\app\\intermediates\\dex\\debug\\mergeProjectDexDebug\\1\\classes.dex
 path.0=classes.dex
 path.1=0/classes.dex
 path.2=0/classes.dex

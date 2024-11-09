@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '582973375044',
     projectId: 'khujbokoi-562ec',
     storageBucket: 'khujbokoi-562ec.firebasestorage.app',
-    iosBundleId: 'com.khujbokoi.app',
+    iosBundleId: 'com.example.khujbokoi',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '582973375044',
     projectId: 'khujbokoi-562ec',
     storageBucket: 'khujbokoi-562ec.firebasestorage.app',
-    iosBundleId: 'com.khujbokoi.app',
+    iosBundleId: 'com.example.khujbokoi',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
@@ -85,4 +85,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'khujbokoi-562ec.firebasestorage.app',
     measurementId: 'G-XG7BEP2R1H',
   );
+
 }
