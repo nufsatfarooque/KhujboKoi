@@ -20,9 +20,10 @@ class MyButton extends StatelessWidget{
     return GestureDetector(
       onTap: () => showPopover(
         context: context,
+        //suggest  passing the entire msg object to this component
         bodyBuilder: (context) => MsgOptions(messageId: messageId,currentUser: currentUser,msgUserName:msgUserName,),
-        width:120, //chng later
-        height: 150,
+        width:170, //chng later
+        height: 86,
         backgroundColor: Colors.purple.shade100,
         direction: PopoverDirection.left,
         ),

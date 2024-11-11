@@ -193,7 +193,7 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
                   margin:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   child: Padding(
-                    padding: const EdgeInsets.all(10.0),
+                    padding: const EdgeInsets.all(5.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -212,7 +212,10 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
                                   fontSize: 12, color: Colors.grey),
                             ),
                             // Spacer
-                            if (userName == currentUser)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                              if (userName == currentUser)
                               IconButton(
                                   onPressed: () =>
                                       openPostBox(messageId: messageId),
@@ -222,6 +225,9 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
                               currentUser: currentUser,
                               msgUserName: userName,
                             ),
+                              ],
+                            ),
+                            
                           ],
                         ),
                         const SizedBox(height: 10),

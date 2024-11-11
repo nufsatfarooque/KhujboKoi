@@ -10,6 +10,10 @@ class DatabaseService{
 
   final CollectionReference messages = 
        FirebaseFirestore.instance.collection('messages');
+  final CollectionReference reportPost = 
+       FirebaseFirestore.instance.collection('report_post');
+  final CollectionReference reportUser = 
+       FirebaseFirestore.instance.collection('report_user');
   //Create
    Future<void> addMessage(String note) {
      return messages.add({
@@ -89,5 +93,27 @@ class DatabaseService{
     });
      
     
+  }
+
+  Future<void> addPostReport(String comment,String reportedBy,String messageId,String type)
+   {
+    return reportPost.add({
+       'comment' : comment,
+       'reported_by' : reportedBy,
+       'reported_post_id' : messageId,
+       'time_reported' : Timestamp.now(),
+       'type' : type,
+    });
+  }
+
+    Future<void> addUserReport(String comment,String reportedBy,String reportedUser,String type)
+   {
+    return reportPost.add({
+       'comment' : comment,
+       'reported_by' : reportedBy,
+       'reported_id' : reportedUser,
+       'time_reported' : Timestamp.now(),
+       'type' : type,
+    });
   }
 }
