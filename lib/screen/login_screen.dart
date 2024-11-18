@@ -1,15 +1,29 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../routes/app_routes.dart';
+import 'package:khujbokoi/routes/app_routes.dart';
+import 'package:khujbokoi/services/auth_service.dart';
+import 'package:khujbokoi/screen/home.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // State variables (if any) can be declared here.
+  final AuthService _auth = AuthService();
+  final TextEditingController _email = TextEditingController();
+  final TextEditingController _password = TextEditingController();
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -39,7 +53,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(fontSize: 28, color: Colors.green),
                     ),
                     const SizedBox(height: 40),
-                    const TextField(   //Extract email data from here
+                    TextField(
+                      controller: _email,
                       decoration: InputDecoration(
                         labelText: 'Email',
                         filled: true,
@@ -47,7 +62,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const TextField(    //Extract password from here
+                    TextField(
+                      controller: _password,
                       decoration: InputDecoration(
                         labelText: 'Password',
                         filled: true,
@@ -56,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: true,
                     ),
                     const SizedBox(height: 32),
-                    ElevatedButton(   //login button
+                    ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16.0),
                         backgroundColor: Colors.green,
@@ -64,13 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           borderRadius: BorderRadius.circular(10.0),
                         ),
                       ),
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          '/bottom_nav',
-                        );
-                        // Handle sign-up logic here
-                      },
+                      onPressed: _login,
                       child: const Text(
                         'Log In',
                         style: TextStyle(fontSize: 18, color: Colors.white),
@@ -82,47 +92,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
-                    ElevatedButton(  //google login using this button
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                      ),
-                      onPressed: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.homePage,
-                        );
-                        // Handle Google login logic here
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Image.asset(
-                            'assets/images/google_logo.png', // Path to your local Google logo image
-                            height: 24.0, // Logo size
-                            width: 24.0,
-                          ),
-                          const SizedBox(width: 1.0),
-                          const Text(
-                            'Log in with your Google account',
-                            style: TextStyle(
-                              color: Colors.green, // Text color
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    //insert google sign in here later 
+                    
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          'Don\'t have an account?',
-                        ),
+                        const Text('Don\'t have an account?'),
                         TextButton(
                           onPressed: () {
                             Navigator.pushNamed(context, '/sign_up_screen');
@@ -143,4 +119,44 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
+  // Navigate to the Home Screen after successful login
+  goToHome(BuildContext context) => Navigator.pushNamed(
+        context,
+        '/bottom_nav',
+      
+          
+      );
+
+  // Regular login with email and password
+  void _login() async {
+    final user = await _auth.loginUserWithEmailAndPassword(
+      _email.text,
+      _password.text,
+    );
+
+    if (user != null) {
+      if (kDebugMode) {
+        print("User logged in with email and password");
+      }
+      // ignore: use_build_context_synchronously
+      goToHome(context);
+    } else {
+      if (kDebugMode) {
+        print("Email/password login failed.");
+      }
+     
+    }
+  }
 }
+
+
+
+ //goToHome(BuildContext context) => Navigator.push(
+ //       context,
+ //       MaterialPageRoute(
+ //           builder: (context) => HomePage(
+ //                 onLoginPress: () {},
+ //               )),
+ //       
+ //     );
