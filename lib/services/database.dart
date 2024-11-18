@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 
 class DatabaseService{
   //get collection of
@@ -14,16 +16,31 @@ class DatabaseService{
        FirebaseFirestore.instance.collection('report_post');
   final CollectionReference reportUser = 
        FirebaseFirestore.instance.collection('report_user');
+  final currentUser = FirebaseAuth.instance.currentUser;
+  final CollectionReference userInfo = 
+      FirebaseFirestore.instance.collection('users'); //relates email to username
+ 
+   
   //Create
-   Future<void> addMessage(String note) {
-     return messages.add({
-      'message' : note,
-      'timePosted' : Timestamp.now(),
-      'downVotes' : 0,
-      'upVotes' : 0,
-      'userName' : "Rafid" //will change to account username when that is ready
-     });
-   }
+   Future<void> addMessage(String note) async {
+  try {
+    // Fetch the userName asynchronously
+    final userName = await getUserNamebyID(currentUser);
+
+    // Add the message to the database
+    await FirebaseFirestore.instance.collection('messages').add({
+      'message': note,
+      'timePosted': Timestamp.now(),
+      'downVotes': 0,
+      'upVotes': 0,
+      'userName': userName,
+      "likedBy": [], // List of user IDs who liked
+      "dislikedBy": [] // List of user IDs who disliked
+    });
+  } catch (e) {
+    throw Exception('Failed to add message');
+  }
+}
   //Read
    Stream<QuerySnapshot> getMessagesStream(){
     final messagesStream = 
@@ -39,16 +56,77 @@ class DatabaseService{
     });
    }
 
+  void handleLikeDislike (String messageId,bool islike,User? currentUser) async {
+    final user = currentUser;
+    if(user == null)
+    {
+      throw Exception("no valid user found");
+    }
+
+    final userID = user.uid; //userID may be null
+
+    if(kDebugMode){
+      print("UserID: $userID");
+    }
+
+    final messageDoc = FirebaseFirestore.instance.collection('messages').doc(messageId);
+
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+        final snapshot = await transaction.get(messageDoc);
+        if(!snapshot.exists)
+        {
+          throw Exception("Message don't exist");
+        }
+
+        final data = snapshot.data() as Map<String,dynamic>;
+        List<dynamic> likedBy = data['likedBy']??[]; //can be null,if null set as empty
+        List<dynamic> dislikedBy = data['dislikedBy']??[];
+
+        //if like button was pressed
+        if(islike){
+           if(likedBy.contains(userID)){
+            //user already liked it, so remove him from list
+            likedBy.remove(userID);
+           }
+           else
+           {
+            likedBy.add(userID);
+            dislikedBy.remove(userID);
+           }
+        }
+        //if dislike button was pressed
+        else{
+           if(dislikedBy.contains(userID)){
+            dislikedBy.remove(userID);
+           }
+           else
+           {
+            dislikedBy.add(userID);
+            likedBy.remove(userID);
+           }
+        }
+
+        transaction.update(messageDoc, {
+            'likedBy': likedBy,
+            'dislikedBy': dislikedBy,
+           
+        });
+    });
+    
+  }
+
   //Update votes 
-  Future<void> updateVotes(String messageId,int type)
+  Future<void> updateVotes(String messageId,int type,User? currentUser)
   {
     if(type == downVoteValInc) {
+      handleLikeDislike(messageId,false,currentUser);
     return messages.doc(messageId).update({
       'downVotes': FieldValue.increment(1),
     });
     
     }
     else if(type == downVoteValDec){
+      handleLikeDislike(messageId,false,currentUser);
       return messages.doc(messageId).update(
         {
           'downVotes' : FieldValue.increment(-1),
@@ -57,6 +135,7 @@ class DatabaseService{
     }
     else if(type == upVoteValInc)
     {
+       handleLikeDislike(messageId,true,currentUser);
       return messages.doc(messageId).update(
          {
           'upVotes' : FieldValue.increment(1),
@@ -65,6 +144,7 @@ class DatabaseService{
     }
     else if (type == upVoteValDec)
     {
+       handleLikeDislike(messageId,true,currentUser);
       return messages.doc(messageId).update(
         {
           'upVotes' : FieldValue.increment(-1),
@@ -115,5 +195,26 @@ class DatabaseService{
        'time_reported' : Timestamp.now(),
        'type' : type,
     });
+  }
+
+  //return username given an email
+  Future<String> getUserNamebyID(User? curUser) async{
+    try{
+        DocumentSnapshot document = await userInfo.doc(curUser!.uid).get();
+        //if document exists
+        if(document.exists && document.data() != null)
+        {
+          Map<String,dynamic> data = document.data() as Map<String,dynamic>;
+          return data['name'] ?? 'undefined';
+        }
+        else{
+          
+          throw Exception('no such userID exists');
+          
+        }
+    }
+    catch(e){
+      throw Exception(e);
+    }
   }
 }

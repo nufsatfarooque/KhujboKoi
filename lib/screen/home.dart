@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:khujbokoi/routes/bottomnav.dart';
 import '../screen/sign_up_screen.dart';
 import '../screen/login_screen.dart';
 
@@ -93,47 +94,19 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
 
-            TextButton(
-              onPressed: widget.onLoginPress,
-              /*onPressed: () {
-                Navigator.pushNamed(context, '/login_screen');
-                // Handle view latest notices action
-              },*/
-              child: const Text('View Latest Notices'),
-            ),
+            //TextButton(
+            //  onPressed: widget.onLoginPress,
+            //  /*onPressed: () {
+            //    Navigator.pushNamed(context, '/login_screen');
+            //    // Handle view latest notices action
+            //  },*/
+            //  child: const Text('View Latest Notices'),
+            //),
           ],
         ),
 
       ),
-      /*bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.shifting,
-        selectedItemColor: Colors.green,
-        unselectedItemColor: Colors.grey,
-        onTap: (index){
-          setState(() {
-            myindex=index;
-          });
-        },
-        currentIndex: myindex,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'House',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.star),
-            label: 'Reviews',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications),
-            label: 'Notice',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: 'Account',
-          ),
-        ],
-      ),*/
+  
 
     ),
     );
