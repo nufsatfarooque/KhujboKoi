@@ -6,11 +6,12 @@ class MsgOptions extends StatelessWidget {
   
   
   final String messageId;
-  final String currentUser;
   
   final dynamic msgUserName;
+  
+  final dynamic currentUserName;
 
-  const MsgOptions({super.key, required this.messageId,required this.currentUser,required this.msgUserName});
+  const MsgOptions({super.key, required this.messageId,required this.currentUserName,required this.msgUserName});
 
    
 
@@ -20,7 +21,7 @@ class MsgOptions extends StatelessWidget {
     return Column(
       children: [
         //1st msg option
-        if( currentUser ==msgUserName)
+        if( currentUserName ==msgUserName)
 
         SizedBox(
           width: buttonWidth,

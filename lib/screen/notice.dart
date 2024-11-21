@@ -189,13 +189,29 @@ Widget build(BuildContext context) {
                     DocumentSnapshot document = messageList[index];
                     Map<String, dynamic> data =
                         document.data() as Map<String, dynamic>;
-
+                    
+                    List<dynamic> dislikedBy = data['dislikedBy'] ?? [];
+                    List<dynamic> likedBy = data['likedBy'] ?? [];
                     String messageId = document.id;
                     String messageTxt = data['message'] ?? 'No message';
                     String userName = data['userName'] ?? 'Anonymous';
                     Timestamp? timePosted = data['timePosted'] as Timestamp?;
                     int upVotes = data['upVotes'] ?? 0;
                     int downVotes = data['downVotes'] ?? 0;
+                    
+                    if(dislikedBy.contains(currentUser!.uid)){
+                       isDownVotedMap[messageId] = true;}
+                    else{
+                      isDownVotedMap[messageId] = false;
+                    }
+                    if(likedBy.contains(currentUser!.uid)){
+                       isUpVotedMap[messageId] = true;
+                    }
+                    else
+                    {
+                       isUpVotedMap[messageId] = false;
+                    }
+                    
 
                     // Format the timePosted
                     String formattedTime = timePosted != null
@@ -214,28 +230,48 @@ Widget build(BuildContext context) {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  userName,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16),
-                                ),
-                                Text(
-                                  formattedTime,
-                                  style: const TextStyle(
-                                      fontSize: 12, color: Colors.grey),
-                                ),
-                                if (isMessageOwner)
-                                  IconButton(
-                                    onPressed: () =>
-                                        openPostBox(messageId: messageId),
-                                    icon: const Icon(Icons.update_outlined),
+                           Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // Username and formatted time on the left
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        userName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      Text(
+                                        formattedTime,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                              ],
-                            ),
+                                  // Spacer to push buttons to the right side
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (userName == currentUserName)
+                                        IconButton(
+                                          onPressed: () => openPostBox(messageId: messageId),
+                                          icon: const Icon(Icons.update_outlined),
+                                        ),
+                                      MyButton(
+                                        messageId: messageId,
+                                        currentUserName: currentUserName,
+                                        msgUserName: userName,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+
                             const SizedBox(height: 10),
                             Text(
                               messageTxt,
