@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:intl/intl.dart';
 
 class DatabaseService{
   //get collection of
@@ -188,7 +189,7 @@ class DatabaseService{
 
     Future<void> addUserReport(String comment,String reportedBy,String reportedUser,String type)
    {
-    return reportPost.add({
+    return reportUser.add({
        'comment' : comment,
        'reported_by' : reportedBy,
        'reported_id' : reportedUser,
@@ -217,4 +218,86 @@ class DatabaseService{
       throw Exception(e);
     }
   }
+
+  //@Rafid : Newly added functions
+  // Function to count total reports for posts on the current date
+  Future<int> countPostReportsToday() async{
+    DateTime now = DateTime.now();
+    DateTime startOfDay = DateTime(now.year,now.month,now.day);//Midnight
+    DateTime endOfDay = DateTime(now.year,now.month,now.day,23,59,59);//End of Day
+
+    QuerySnapshot querySnapshot = await reportPost
+                             .where('time_reported',isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+                             .where('time_reported',isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+                             .get();
+    
+    return querySnapshot.docs.length;
+  }
+
+  //@Rafid : Newly added functions
+  // Function to count total reports for users on the current date
+  Future<int> countUserReportsToday() async {
+    DateTime now = DateTime.now();
+    DateTime startOfDay = DateTime(now.year, now.month, now.day); // Midnight
+    DateTime endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59); // End of the day
+
+    QuerySnapshot querySnapshot = await reportUser
+        .where('time_reported',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay)) // Start of the day
+        .where('time_reported',
+            isLessThanOrEqualTo: Timestamp.fromDate(endOfDay)) // End of the day
+        .get();
+
+    return querySnapshot.docs.length; // Count the documents
+  }
+
+  //@Rafid : Newly added functions
+  //Function to retrieve total num. of posts made for the past week
+
+  Future<Map<String,int>> getPostsWeeklyReport() async {
+
+    Map<String,int> postsPerDay = {};
+    DateTime now = DateTime.now();
+
+    //Initialize the map for 7 days (6 prev days + now)
+    for(int i=0;i<7;i++)
+    {
+      DateTime date = now.subtract(Duration(days: i));
+      String formattedDate = DateFormat('MMM-dd').format(date);
+      postsPerDay[formattedDate] = 0;
+    }
+
+    try{
+        // Fetch the row of docs within 7 days
+      DateTime startDate = now.subtract(const Duration(days:6));
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('messages')
+                                    .where('timePosted',isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+                                    .where('timePosted',isLessThanOrEqualTo: Timestamp.fromDate(now))
+                                    .get();
+
+      // Check each message
+      for(var doc in querySnapshot.docs){
+        //extract the doc content into a map
+        Map<String,dynamic> data = doc.data() as Map<String,dynamic>; //cast doc contents as a Map
+        Timestamp timePosted = data['timePosted'] as Timestamp; // (Maybe an unnecessary casting)
+
+        //convert the data Timestamp into a DateTime type
+        DateTime postedDate = timePosted.toDate();
+        //convert date time into formatted string date
+        String formattedDate = DateFormat('MMM-dd').format(postedDate);
+
+        //now check if the date we got from the doc is the date we want to count for
+        if(postsPerDay.containsKey(formattedDate)){
+          postsPerDay[formattedDate] = postsPerDay[formattedDate]! + 1;
+        }
+      }
+    }
+    catch(e){
+       throw Exception('Failed to fetch post counts: $e');
+    }
+    
+    return postsPerDay;
+  }
+
+
 }

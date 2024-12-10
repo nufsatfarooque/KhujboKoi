@@ -45,7 +45,9 @@ dependencies:
   cloud_firestore: ^5.4.5
   #Added google_sign_in from miraj's zip file
   #google_sign_in: ^6.2.2 
-  popover: ^0.2.8+2
+  #@Rafid: added this for charts
+  fl_chart: ^0.69.2 
+  popover: ^0.3.1
   intl: ^0.19.0
   firebase_messaging: ^15.1.5
 

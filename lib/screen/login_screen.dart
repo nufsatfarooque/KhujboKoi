@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:khujbokoi/core/firestore.dart';
 import 'package:khujbokoi/routes/app_routes.dart';
 import 'package:khujbokoi/services/auth_service.dart';
 import 'package:khujbokoi/screen/home.dart';
@@ -128,7 +129,40 @@ class _LoginScreenState extends State<LoginScreen> {
           
       );
 
+  goToAdminHome(BuildContext context) => Navigator.pushNamed(
+        context,
+        '/admin_nav',
+      
+          
+      );
+
+
   // Regular login with email and password
+ // Navigate to the Home Screen after successful login
+  goToUser(BuildContext context) => Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => HomePage(
+                  onLoginPress: () {},
+                )),
+      );
+  // goToHomeOwner(BuildContext context) => Navigator.push(
+  //       context,
+  //       MaterialPageRoute(
+  //           builder: (context) => HomeOwnerPage(
+  //                 onLoginPress: () {},
+  //               )),
+  //     );
+  // goToRestOwner(BuildContext context) => Navigator.push(
+  //       context,
+  //       MaterialPageRoute(
+  //           builder: (context) => RestOwnerPage(
+  //                 onLoginPress: () {},
+  //               )),
+  //     );
+
+  // Regular login with email and password
+    // Regular login with email and password
   void _login() async {
     final user = await _auth.loginUserWithEmailAndPassword(
       _email.text,
@@ -136,19 +170,49 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (user != null) {
-      if (kDebugMode) {
-        print("User logged in with email and password");
+      print("User logged in with email and password");
+      final snapshot =
+          await firestoreDb.collection("users").doc(user.uid).get();
+      final data = snapshot.data();
+      print(data);
+      String role = data?["role"];
+
+      if (role == "Home Owner") {
+        //goToHomeOwner(context);
+      } else if (role == "Restaurant Owner") {
+        //goToRestOwner(context);
       }
-      // ignore: use_build_context_synchronously
-      goToHome(context);
+      else if (role == "Administrator"){
+        goToAdminHome(context);
+      } else {
+        goToHome(context);
+      }
     } else {
-      if (kDebugMode) {
-        print("Email/password login failed.");
-      }
-     
+      // Show a dialog when credentials don't match
+      _showLoginErrorDialog(context);
     }
   }
+
 }
+
+  void _showLoginErrorDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Login Failed"),
+          content: const Text("The email or password you entered is incorrect."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 
 
 

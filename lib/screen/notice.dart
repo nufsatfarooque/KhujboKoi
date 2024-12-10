@@ -1,26 +1,24 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:khujbokoi/components/button.dart';
 import 'package:khujbokoi/services/database.dart';
-import 'package:intl/intl.dart'; // To format the timestamp
+import 'package:intl/intl.dart';
+import 'package:khujbokoi/services/firebase_api.dart'; // To format the timestamp
 //import 'package:cloud_firestore/cloud_firestore.dart';
-
 class NoticeBoardScreen extends StatefulWidget {
   const NoticeBoardScreen({super.key});
-
   @override
   // ignore: library_private_types_in_public_api
   _NoticeBoardScreenState createState() => _NoticeBoardScreenState();
 }
-
 class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
   // Simulated method for adding a notice (you can integrate Firebase)
   @override
   void initState() {
     super.initState();
-
     // Set the status bar color to green
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -31,35 +29,27 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
  
    final TextEditingController textController = TextEditingController();
    final DatabaseService database = DatabaseService();
-
   //map for state of each button
   final Map<String, bool> isUpVotedMap = {};
   final Map<String, bool> isDownVotedMap = {};
-
   //
   final currentUser = FirebaseAuth.instance.currentUser;
  
-
  
-
   //upVote and DownVote button states
   bool isUpVoted = false;
   bool isDownVoted = false;
-
   void openPostBox({String? messageId}) async {
+    await FirebaseApi().initNotification();
     var buttonText = "Post";
-
     // If a messageId is provided, fetch the existing message and pre-fill the TextField
     if (messageId != null) {
       buttonText = "Update";
-
       // Fetch the existing data from Firestore
       DocumentSnapshot document = await database.getMessageById(messageId);
-
       if (document.exists) {
         Map<String, dynamic> data = document.data() as Map<String, dynamic>;
         String existingMessage = data['message'] ?? '';
-
         // Set the existing text in the text controller
         textController.text = existingMessage;
       }
@@ -67,7 +57,6 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
       // Clear the text controller if it's a new post
       textController.clear();
     }
-
     showDialog(
       // ignore: use_build_context_synchronously
       context: context,
@@ -97,13 +86,11 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
       ),
     );
   }
-
   void toggleUpVote(
       {messageId, required int currUpVotes, required int currDownVotes}) {
     setState(() {
       isUpVotedMap[messageId] =
           !(isUpVotedMap[messageId] ?? false); // Toggle upvote
-
       if (isUpVotedMap[messageId] == true) {
         //increment upVote and decrement downVote if it was on
         if (isDownVotedMap[messageId] == true && currDownVotes > 0) {
@@ -116,7 +103,6 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
       }
     });
   }
-
   void toggleDownVote(
       {messageId, required int currUpVotes, required int currDownVotes}) {
     setState(() {
@@ -132,7 +118,6 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
       }
     });
   }
-
 @override
 Widget build(BuildContext context) {
   return SafeArea(
@@ -174,15 +159,12 @@ Widget build(BuildContext context) {
           if (!snapshot.hasData || snapshot.data == null) {
             return const Center(child: Text("No user name available."));
           }
-
           final String currentUserName = snapshot.data!;
-
           return StreamBuilder<QuerySnapshot>(
             stream: database.getMessagesStream(),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 List<DocumentSnapshot> messageList = snapshot.data!.docs;
-
                 return ListView.builder(
                   itemCount: messageList.length,
                   itemBuilder: (context, index) {
@@ -198,29 +180,32 @@ Widget build(BuildContext context) {
                     Timestamp? timePosted = data['timePosted'] as Timestamp?;
                     int upVotes = data['upVotes'] ?? 0;
                     int downVotes = data['downVotes'] ?? 0;
+                    bool liked = false;
                     
                     if(dislikedBy.contains(currentUser!.uid)){
-                       isDownVotedMap[messageId] = true;}
+                       isDownVotedMap[messageId] = true;
+                       liked = false;
+                       }
                     else{
                       isDownVotedMap[messageId] = false;
                     }
                     if(likedBy.contains(currentUser!.uid)){
                        isUpVotedMap[messageId] = true;
+                       liked = true;
                     }
                     else
                     {
                        isUpVotedMap[messageId] = false;
                     }
-                    
 
+                    print("map check done");
+                    
                     // Format the timePosted
                     String formattedTime = timePosted != null
                         ? DateFormat.yMMMd().add_jm().format(timePosted.toDate())
                         : 'Unknown time';
-
                     // Check ownership
                     bool isMessageOwner = userName == currentUserName;
-
                     return Card(
                       elevation: 4,
                       margin: const EdgeInsets.symmetric(
@@ -271,7 +256,6 @@ Widget build(BuildContext context) {
                                   ),
                                 ],
                               ),
-
                             const SizedBox(height: 10),
                             Text(
                               messageTxt,
@@ -306,13 +290,12 @@ Widget build(BuildContext context) {
                                           currDownVotes: downVotes,
                                           currUpVotes: upVotes),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: isUpVotedMap[
-                                                    messageId] ??
+                                        backgroundColor: isUpVotedMap[messageId] ??
                                                 false
                                             ? Colors.blue
                                             : Colors.grey,
                                       ),
-                                      child: const Text("Upvote"),
+                                      child: Icon(Icons.arrow_circle_up_sharp),
                                     ),
                                     const SizedBox(width: 10),
                                     ElevatedButton(
@@ -321,13 +304,12 @@ Widget build(BuildContext context) {
                                           currDownVotes: downVotes,
                                           currUpVotes: upVotes),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: isDownVotedMap[
-                                                    messageId] ??
+                                        backgroundColor: isDownVotedMap[messageId] ??
                                                 false
                                             ? Colors.red
                                             : Colors.grey,
                                       ),
-                                      child: const Text("Downvote"),
+                                      child: Icon(Icons.arrow_circle_down_sharp),
                                     ),
                                   ],
                                 ),
@@ -349,5 +331,4 @@ Widget build(BuildContext context) {
     ),
   );
 }
-
 }
