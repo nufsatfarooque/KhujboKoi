@@ -20,7 +20,8 @@ class DatabaseService{
   final currentUser = FirebaseAuth.instance.currentUser;
   final CollectionReference userInfo = 
       FirebaseFirestore.instance.collection('users'); //relates email to username
- 
+  final dailySignIns = 
+        FirebaseFirestore.instance.collection('daily_sign_ins');
    
   //Create
    Future<void> addMessage(String note) async {
@@ -184,6 +185,7 @@ class DatabaseService{
        'reported_post_id' : messageId,
        'time_reported' : Timestamp.now(),
        'type' : type,
+       'status' : "pending",
     });
   }
 
@@ -195,7 +197,22 @@ class DatabaseService{
        'reported_id' : reportedUser,
        'time_reported' : Timestamp.now(),
        'type' : type,
+       'status' : "pending",
     });
+  }
+
+  Stream<QuerySnapshot> getPostReportStream(){
+     final postReportStream = 
+      reportPost.orderBy('time_reported',descending: true).snapshots();
+
+    return postReportStream;
+  }
+
+  Stream<QuerySnapshot> getUserReportStream(){
+    final userReportStream = 
+     reportUser.orderBy('time_reported',descending: true).snapshots();
+
+    return userReportStream;
   }
 
   //return username given an email
@@ -219,85 +236,159 @@ class DatabaseService{
     }
   }
 
+  //return a user doc given a username
+  Future<QuerySnapshot> getUserbyUserName(String userName) async{
+    try{
+      QuerySnapshot userSnapshot = await userInfo.where('name',isEqualTo: userName).get();
+      return userSnapshot;
+    }
+    catch(e)
+    {
+      throw Exception("User with this username doesn't exist : $e");
+    }
+  }
+
   //@Rafid : Newly added functions
   // Function to count total reports for posts on the current date
-  Future<int> countPostReportsToday() async{
-    DateTime now = DateTime.now();
-    DateTime startOfDay = DateTime(now.year,now.month,now.day);//Midnight
-    DateTime endOfDay = DateTime(now.year,now.month,now.day,23,59,59);//End of Day
+  Stream<int> countPostReportsToday() {
+  DateTime now = DateTime.now();
+  DateTime startOfDay = DateTime(now.year, now.month, now.day);
+  DateTime endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
 
-    QuerySnapshot querySnapshot = await reportPost
-                             .where('time_reported',isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-                             .where('time_reported',isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
-                             .get();
-    
-    return querySnapshot.docs.length;
-  }
+  return reportPost
+      .where('time_reported', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+      .where('time_reported', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+      .snapshots()
+      .map((querySnapshot) => querySnapshot.docs.length);
+}
+
 
   //@Rafid : Newly added functions
   // Function to count total reports for users on the current date
-  Future<int> countUserReportsToday() async {
-    DateTime now = DateTime.now();
-    DateTime startOfDay = DateTime(now.year, now.month, now.day); // Midnight
-    DateTime endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59); // End of the day
+ Stream<int> countUserReportsToday() {
+  DateTime now = DateTime.now();
+  DateTime startOfDay = DateTime(now.year, now.month, now.day);
+  DateTime endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
 
-    QuerySnapshot querySnapshot = await reportUser
-        .where('time_reported',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay)) // Start of the day
-        .where('time_reported',
-            isLessThanOrEqualTo: Timestamp.fromDate(endOfDay)) // End of the day
-        .get();
+  return reportUser
+      .where('time_reported', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+      .where('time_reported', isLessThanOrEqualTo: Timestamp.fromDate(endOfDay))
+      .snapshots()
+      .map((querySnapshot) => querySnapshot.docs.length);
+}
 
-    return querySnapshot.docs.length; // Count the documents
-  }
 
   //@Rafid : Newly added functions
   //Function to retrieve total num. of posts made for the past week
 
-  Future<Map<String,int>> getPostsWeeklyReport() async {
+Stream<Map<String, int>> getPostsWeeklyReport() {
+  DateTime now = DateTime.now();
+  DateTime startDate = now.subtract(const Duration(days: 6));
 
-    Map<String,int> postsPerDay = {};
-    DateTime now = DateTime.now();
-
-    //Initialize the map for 7 days (6 prev days + now)
-    for(int i=0;i<7;i++)
-    {
-      DateTime date = now.subtract(Duration(days: i));
-      String formattedDate = DateFormat('MMM-dd').format(date);
-      postsPerDay[formattedDate] = 0;
-    }
-
-    try{
-        // Fetch the row of docs within 7 days
-      DateTime startDate = now.subtract(const Duration(days:6));
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('messages')
-                                    .where('timePosted',isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
-                                    .where('timePosted',isLessThanOrEqualTo: Timestamp.fromDate(now))
-                                    .get();
-
-      // Check each message
-      for(var doc in querySnapshot.docs){
-        //extract the doc content into a map
-        Map<String,dynamic> data = doc.data() as Map<String,dynamic>; //cast doc contents as a Map
-        Timestamp timePosted = data['timePosted'] as Timestamp; // (Maybe an unnecessary casting)
-
-        //convert the data Timestamp into a DateTime type
-        DateTime postedDate = timePosted.toDate();
-        //convert date time into formatted string date
-        String formattedDate = DateFormat('MMM-dd').format(postedDate);
-
-        //now check if the date we got from the doc is the date we want to count for
-        if(postsPerDay.containsKey(formattedDate)){
-          postsPerDay[formattedDate] = postsPerDay[formattedDate]! + 1;
+  return FirebaseFirestore.instance
+      .collection('messages')
+      .where('timePosted', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+      .where('timePosted', isLessThanOrEqualTo: Timestamp.fromDate(now))
+      .snapshots()
+      .map((querySnapshot) {
+        Map<String, int> postsPerDay = {};
+        for (int i = 0; i < 7; i++) {
+          DateTime date = now.subtract(Duration(days: i));
+          String formattedDate = DateFormat('MMM-dd').format(date);
+          postsPerDay[formattedDate] = 0; // Initialize counts
         }
+
+        for (var doc in querySnapshot.docs) {
+          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          Timestamp timePosted = data['timePosted'] as Timestamp;
+          String formattedDate = DateFormat('MMM-dd').format(timePosted.toDate());
+          if (postsPerDay.containsKey(formattedDate)) {
+            postsPerDay[formattedDate] = postsPerDay[formattedDate]! + 1;
+          }
+        }
+        return postsPerDay;
+      });
+}
+
+  //fetches number of total signed in users for the past week
+   Stream<Map<String, int>> getActiveUsersWeeklyReport() {
+  DateTime now = DateTime.now();
+  DateTime startDate = now.subtract(const Duration(days: 6));
+
+  return dailySignIns
+      .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+      .where('date', isLessThanOrEqualTo: Timestamp.fromDate(now))
+      .snapshots()
+      .map((querySnapshot) {
+        Map<String, int> usersPerDay = {};
+        for (int i = 0; i < 7; i++) {
+          DateTime date = now.subtract(Duration(days: i));
+          String formattedDate = DateFormat('MMM-dd').format(date);
+          usersPerDay[formattedDate] = 0; // Initialize counts
+        }
+
+        for (var doc in querySnapshot.docs) {
+          Map<String, dynamic> data = doc.data();
+          Timestamp date = data['date'] as Timestamp;
+          Map<String, dynamic> usersSignedIn = data['users_signed_in'] ?? {};
+          String formattedDate = DateFormat('MMM-dd').format(date.toDate());
+          if (usersPerDay.containsKey(formattedDate)) {
+            usersPerDay[formattedDate] = usersSignedIn.length;
+          }
+        }
+        return usersPerDay;
+      });
+}
+
+    //@Rafid : Newly added functions 17th Dec 2024
+    //Function to update daily_sign_in collection -> used for daily sign in graph
+    Future<void> handleDailySignIns(String uid)
+    async {
+
+      //uid must be provided
+      final today = DateTime.now();
+      final formattedDate = DateTime(today.year,today.month,today.day);
+      final formattedTimeStamp = Timestamp.fromDate(formattedDate);
+
+      try{
+          //first check if date is there
+          final querySnapShot = await dailySignIns.where('date',isEqualTo: formattedTimeStamp)
+                                                   .get();
+          
+          //if date does not exist, we create an initialize the date
+          if(querySnapShot.docs.isEmpty)
+          {
+             await dailySignIns.add({
+              'date' : formattedTimeStamp,
+              'users_signed_in' : {uid : 1},
+             });
+          }
+          //else if date does exist, check if uid is already present
+          else{
+            //check if uid exist or not
+            final doc = querySnapShot.docs.first;
+            final docRef = dailySignIns.doc(doc.id); // need this to update a specific document
+            final data = doc.data();
+
+            //fetch the existing map
+            final Map<String,dynamic> usersSignedIn = data['users_signed_in'] ?? {};
+
+            if(usersSignedIn.containsKey(uid))
+             {
+              //if key exists, no further operations required
+              return;
+             }
+            else
+            {
+              usersSignedIn[uid] = 1;
+              await docRef.update({'users_signed_in' : usersSignedIn});
+            }
+          }
       }
+      catch(e)
+      {
+        throw Exception("Error performing action : $e");
+      }
+      
     }
-    catch(e){
-       throw Exception('Failed to fetch post counts: $e');
-    }
-    
-    return postsPerDay;
-  }
-
-
 }
