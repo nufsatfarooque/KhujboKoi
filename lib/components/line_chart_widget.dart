@@ -5,7 +5,8 @@ import 'package:flutter/material.dart';
 class LineChartWidget extends StatelessWidget {
   final Map<String, int> data;
   final String chartTitle;
-  const LineChartWidget({super.key, required this.data, required this.chartTitle});
+  final int colorPreset; // 0 = amber, 1 = red or deepOrange
+  const LineChartWidget({super.key, required this.data,required this.colorPreset, required this.chartTitle});
 
   @override
   Widget build(BuildContext context) {
@@ -90,12 +91,12 @@ class LineChartWidget extends StatelessWidget {
                     return FlSpot(entry.key.toDouble(), entry.value.toDouble());
                   }).toList(),
                   isCurved: true,
-                  color: Colors.blue,
+                  color: colorPreset == 0 ? Colors.amber : Colors.deepOrange,
                   barWidth: 3,
                   isStrokeCapRound: true,
                   belowBarData: BarAreaData(
                     show: true,
-                    color: Colors.blue.withOpacity(0.2),
+                    color: colorPreset == 0 ?Colors.amber.withOpacity(0.2): Colors.deepOrange.withOpacity(0.2),
                   ),
                 ),
               ],
