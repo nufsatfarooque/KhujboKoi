@@ -3,9 +3,10 @@ import 'dart:ui';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:async/async.dart'; // Import the rxdart package
 import 'package:khujbokoi/services/database.dart';
 import 'package:khujbokoi/components/line_chart_widget.dart';
+
 class AdminDashboard extends StatefulWidget {
   final VoidCallback onLoginPress;
   const AdminDashboard({super.key, required this.onLoginPress});
@@ -15,9 +16,6 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
-  int userReports = 0; // To store user reports count
-  int postReports = 0; // To store post reports count
-  Map<String, int> weeklyPostsCount = {};
   final DatabaseService database = DatabaseService();
 
   @override
@@ -30,203 +28,239 @@ class _AdminDashboardState extends State<AdminDashboard> {
         statusBarColor: Colors.green, // Status bar color
       ),
     );
-
-    // Fetch reports data
-    fetchReportsData();
-    // Fetch weekly posts number
-    fetchWeeklyPostsCount();
   }
 
-  Future<void> fetchWeeklyPostsCount() async {
-    Map<String, int> weeklyReport = await database.getPostsWeeklyReport();
-
-    setState(() {
-      weeklyPostsCount = weeklyReport;
-    });
-  }
-
-  Future<void> fetchReportsData() async {
-    int userReportsCount = await database.countUserReportsToday();
-    int postReportsCount = await database.countPostReportsToday();
-
-    setState(() {
-      userReports = userReportsCount;
-      postReports = postReportsCount;
-    });
-  }
-
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    body: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header
-        Container(
-          width: double.infinity,
-          color: Colors.green,
-          padding: const EdgeInsets.all(16.0),
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "KhujboKoi?",
-                style: TextStyle(
-                  fontSize: 24.0,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Container(
+            width: double.infinity,
+            color: Colors.green,
+            padding: const EdgeInsets.all(16.0),
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "KhujboKoi?",
+                  style: TextStyle(
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              SizedBox(height: 8.0),
-              Text(
-                "Welcome Admin",
-                style: TextStyle(
-                  fontSize: 16.0,
-                  color: Colors.white,
+                SizedBox(height: 8.0),
+                Text(
+                  "Welcome Admin",
+                  style: TextStyle(
+                    fontSize: 16.0,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
 
-        // Dashboard Content
-        Expanded(
-          child: Column(
-            children: [
-              // Active Users Line Graph Placeholder
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: PlaceholderBox(
-                    text: "Active users line graph",
+          // Dashboard Content
+          Expanded(
+            child: Column(
+              children: [
+                // Active Users Line Graph
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade100,
+                        borderRadius: BorderRadius.circular(12.0),
+                        border: Border.all(
+                          color: Colors.green.shade400,
+                          width: 2.0,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8.0,
+                            offset: const Offset(2, 2),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(10.0),
+                      child: StreamBuilder<Map<String, int>>(
+                        stream: database.getActiveUsersWeeklyReport(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const CircularProgressIndicator();
+                          }
+                          return LineChartWidget(
+                            data: snapshot.data!,
+                            chartTitle: "Weekly User Sign-ins",
+                            colorPreset: 0,
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ),
-              ),
 
-              // Vertical Spacing
-              //const SizedBox(height: 1.0),
-
-              // Approvals Pending and Reports Made Row
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      // Approvals Pending
-                      Expanded(
-                        child: StatBox(
-                          label: "Approvals pending",
-                          value: "12", // Placeholder value
-                        ),
-                      ),
-
-                      const SizedBox(width: 8.0), // Horizontal spacing
-
-                      // Reports Made with Pie Chart
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade100,
-                            borderRadius: BorderRadius.circular(12.0),
+                // Approvals Pending and Reports Made
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        // Approvals Pending
+                        Expanded(
+                          child: StatBox(
+                            label: "Approvals pending",
+                            value: "12", // Placeholder value
                           ),
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Reports Label
-                              Text(
-                                "Reports made : ${userReports + postReports}",
-                                style: const TextStyle(
-                                  fontSize: 16.0,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(width: 8.0), // Horizontal spacing
+
+                        // Reports Made with Pie Chart
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade100,
+                              borderRadius: BorderRadius.circular(12.0),
+                              border: Border.all(
+                                color: Colors.green.shade400,
+                                width: 2.0,
                               ),
-                              const SizedBox(height: 16.0), // Spacing before pie chart
-
-                              // Pie Chart for Reports
-                              if (userReports + postReports > 0)
-                                Flexible(
-                                  child: PieChart(
-                                    PieChartData(
-                                      sections: [
-                                        PieChartSectionData(
-                                          value: userReports.toDouble(),
-                                          color: const Color.fromARGB(251, 82, 147, 127),
-                                          title:
-                                              "Users: ${((userReports / (userReports + postReports)) * 100).toStringAsFixed(1)}%",
-                                          radius: 52,
-                                          titleStyle: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        PieChartSectionData(
-                                          value: postReports.toDouble(),
-                                          color: const Color.fromARGB(255, 243, 165, 101),
-                                          title:
-                                              "Posts: ${((postReports / (userReports + postReports)) * 100).toStringAsFixed(1)}%",
-                                          radius: 52,
-                                          titleStyle: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ],
-                                      sectionsSpace: 2,
-                                      centerSpaceRadius: 45,
-                                    ),
-                                  ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 8.0,
+                                  offset: const Offset(2, 2),
                                 ),
-                            ],
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.all(16.0),
+                            child: StreamBuilder<List<int>>(
+                              stream: StreamZip([
+                                database.countUserReportsToday(),
+                                database.countPostReportsToday(),
+                              ]),
+                              builder: (context, snapshot) {
+                                if (!snapshot.hasData) {
+                                  return const CircularProgressIndicator();
+                                }
+
+                                final userReports = snapshot.data![0];
+                                final postReports = snapshot.data![1];
+
+                                return Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Reports made : ${userReports + postReports}",
+                                      style: const TextStyle(
+                                        fontSize: 16.0,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    const SizedBox(height: 16.0),
+
+                                    // Pie Chart for Reports
+                                    Flexible(
+                                      child: PieChart(
+                                        PieChartData(
+                                          sections: [
+                                            PieChartSectionData(
+                                              value: userReports.toDouble(),
+                                              color: const Color.fromARGB(251, 82, 147, 127),
+                                              title:
+                                                  "Users: ${((userReports / (userReports + postReports)) * 100).toStringAsFixed(1)}%",
+                                              radius: 52,
+                                              titleStyle: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            PieChartSectionData(
+                                              value: postReports.toDouble(),
+                                              color: const Color.fromARGB(255, 232, 156, 93),
+                                              title:
+                                                  "Posts: ${((postReports / (userReports + postReports)) * 100).toStringAsFixed(1)}%",
+                                              radius: 52,
+                                              titleStyle: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ],
+                                          sectionsSpace: 2,
+                                          centerSpaceRadius: 45,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Vertical Spacing
-              //const SizedBox(height: 1.0),
-
-              // Post Activity Graph Placeholder
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Container(
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade100,
-                      borderRadius: BorderRadius.circular(12.0),
-                      border: Border.all(
-                        color: Colors.green.shade400,
-                        width: 2.0,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8.0,
-                          offset: const Offset(2, 2),
                         ),
                       ],
                     ),
-                    padding: const EdgeInsets.all(10.0),
-                    child:LineChartWidget(data: weeklyPostsCount,chartTitle: "Weekly Posts Activity",),
                   ),
                 ),
-              ),
-            ],
+
+                // Weekly Post Activity Graph
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Container(
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade100,
+                        borderRadius: BorderRadius.circular(12.0),
+                        border: Border.all(
+                          color: Colors.green.shade400,
+                          width: 2.0,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8.0,
+                            offset: const Offset(2, 2),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(10.0),
+                      child: StreamBuilder<Map<String, int>>(
+                        stream: database.getPostsWeeklyReport(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const CircularProgressIndicator();
+                          }
+                          return LineChartWidget(
+                            data: snapshot.data!,
+                            chartTitle: "Weekly Posts Activity",
+                            colorPreset: 1,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 }
-}
+
 
 
 class PlaceholderBox extends StatelessWidget {
@@ -263,27 +297,47 @@ class StatBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.green.shade100,
-        borderRadius: BorderRadius.circular(12.0),
-      ),
+    
       alignment: Alignment.center,
+      decoration: BoxDecoration(
+                      color: Colors.green.shade100,
+                      borderRadius: BorderRadius.circular(12.0),
+                      border: Border.all(
+                        color: Colors.green.shade400,
+                        width: 2.0,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8.0,
+                          offset: const Offset(2, 2),
+                        ),
+                      ],
+                    ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 36.0,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+         Text(
+  value,
+  style: const TextStyle(
+    fontSize: 66.0,
+    fontWeight: FontWeight.bold,
+    color: Colors.deepOrange, // Dark green color
+    shadows: [
+      Shadow(
+        color: Colors.black38, // Shadow color
+        blurRadius: 0.5, // How soft the shadow is
+        offset: Offset(2, 2), // Offset from the text
+      ),
+    ],
+  ),
+),
           const SizedBox(height: 8.0),
           Text(
             label,
             style: const TextStyle(
               fontSize: 16.0,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.bold,
             ),
             textAlign: TextAlign.center,
           ),
