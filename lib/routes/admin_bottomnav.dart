@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:khujbokoi/screen/admin_home.dart';
+import 'package:khujbokoi/screen/manage_reports_page.dart';
 import 'package:khujbokoi/screen/reviews.dart';
 import '../screen/notice.dart';
 import '../screen/sign_up_screen.dart';
@@ -48,7 +49,7 @@ class _AdminBottomNavState extends State<AdminBottomNav> {
             },
           ),
           ReviewsPage(),
-          NoticeBoardScreen(),
+          ManageReportsPage(),
           SignUpScreen()
         ],
       ),
