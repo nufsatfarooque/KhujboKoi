@@ -4,6 +4,7 @@ import 'package:khujbokoi/core/firestore.dart';
 import 'package:khujbokoi/routes/app_routes.dart';
 import 'package:khujbokoi/services/auth_service.dart';
 import 'package:khujbokoi/screen/home.dart';
+import 'package:khujbokoi/services/database.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -17,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final AuthService _auth = AuthService();
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
+  final DatabaseService database = DatabaseService(); // @Rafid : Need this for proper function of admin panel
 
   @override
   void dispose() {
@@ -170,6 +172,8 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (user != null) {
+      //user successfully logged in, so keep a record of its signin in the daily_sign_in collections
+      database.handleDailySignIns(user.uid);
       print("User logged in with email and password");
       final snapshot =
           await firestoreDb.collection("users").doc(user.uid).get();
