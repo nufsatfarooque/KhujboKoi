@@ -34,7 +34,7 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
   final Map<String, bool> isDownVotedMap = {};
   //
   final currentUser = FirebaseAuth.instance.currentUser;
- 
+  final FirebaseApi msg_api = FirebaseApi();
  
   //upVote and DownVote button states
   bool isUpVoted = false;
@@ -160,6 +160,9 @@ Widget build(BuildContext context) {
             return const Center(child: Text("No user name available."));
           }
           final String currentUserName = snapshot.data!;
+          //to reduce merging issue with miraj's login page, saving tokens is done here
+          msg_api.saveDeviceToken();
+          //---------------------------------------------------------------------------
           return StreamBuilder<QuerySnapshot>(
             stream: database.getMessagesStream(),
             builder: (context, snapshot) {

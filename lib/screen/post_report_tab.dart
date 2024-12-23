@@ -40,6 +40,7 @@ class _PostReportTabState extends State<PostReportTab> {
                 .format(report['time_reported'].toDate());
             final status = report['status'];
             final comment = report['comment'];
+            final report_id = report.id;
 
             return FutureBuilder<DocumentSnapshot>(
               future: database.getMessageById(reportedPostId),
@@ -85,6 +86,8 @@ class _PostReportTabState extends State<PostReportTab> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Container(
+                                  width: MediaQuery.of(context).size.width *
+                                      0.85, // 90% of screen width
                                   padding: const EdgeInsets.all(8.0),
                                   decoration: BoxDecoration(
                                     color: Colors.green,
@@ -130,11 +133,11 @@ class _PostReportTabState extends State<PostReportTab> {
                                         ],
                                       ),
                                       SizedBox(
-                                        width: 37,
+                                        width: 35,
                                       ),
                                       // Status Text
                                       Text(
-                                        'Status: $status',
+                                        'Status:$status',
                                         style: const TextStyle(
                                           fontSize: 12,
                                           color: Colors.orange,
@@ -253,11 +256,20 @@ class _PostReportTabState extends State<PostReportTab> {
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
                                 ElevatedButton(
-                                  onPressed: () {
-                                    // will be implemented later
+                                  onPressed: () => {
+                                    if(status == "pending")
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) =>
+                                          AdminResponseToReporter(
+                                        report_id: report_id,
+                                        delete_post: true,
+                                      ),
+                                    )
                                   },
                                   style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.redAccent,
+                                      backgroundColor: status =="pending"?? false? 
+                                                               Colors.redAccent:Colors.grey,
                                       shadowColor: Colors.black,
                                       elevation: 5,
                                       shape: RoundedRectangleBorder(
@@ -275,11 +287,20 @@ class _PostReportTabState extends State<PostReportTab> {
                                   width: 7,
                                 ),
                                 ElevatedButton(
-                                  onPressed: () {
-                                    // will be implemented later
+                                  onPressed: () => {
+                                    if(status == "pending")
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) =>
+                                          AdminResponseToReporter(
+                                        report_id: report_id,
+                                        delete_post: false,
+                                      ),
+                                    )
                                   },
                                   style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.orange,
+                                      backgroundColor: status == "pending" ?? false?
+                                                                    Colors.orange:Colors.grey,
                                       shadowColor: Colors.black,
                                       elevation: 5,
                                       shape: RoundedRectangleBorder(
@@ -306,6 +327,130 @@ class _PostReportTabState extends State<PostReportTab> {
           },
         );
       },
+    );
+  }
+}
+
+class AdminResponseToReporter extends StatelessWidget {
+  AdminResponseToReporter({
+    super.key,
+    required this.report_id,
+    required this.delete_post,
+  });
+
+  final TextEditingController _replyController = TextEditingController();
+
+  final report_id;
+
+  final bool delete_post;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        "Send a response to reporter",
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _replyController,
+              maxLines: null,
+              decoration: const InputDecoration(
+                labelText: "Your response to the reporter",
+                border: OutlineInputBorder(),
+                hintText: "Describe why you took this action",
+              ),
+            )
+          ],
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+            onPressed: () async {
+              if (_replyController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Cannot give an empty response!"),
+                ));
+                return;
+              }
+
+              await DatabaseService().reportPost.doc(report_id).update({
+                'response': _replyController.text,
+                'status': "resolved",
+              });
+              
+               // ignore: use_build_context_synchronously
+              Navigator.pop(context);
+              //init AdminResponseToAccused and pop this form
+              if (delete_post) {
+                showDialog(
+                  // ignore: use_build_context_synchronously
+                  context: context,
+                  builder: (context) => AdminResponseToAccused(
+                    report_id: report_id,
+                
+                  ),
+                );
+              }
+             
+            },
+            child: Text("Send Response"))
+      ],
+    );
+  }
+}
+
+class AdminResponseToAccused extends StatelessWidget {
+  AdminResponseToAccused({super.key, required this.report_id});
+
+  final TextEditingController _replyController = TextEditingController();
+
+  final report_id;
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        "Send a response to accused user",
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _replyController,
+              maxLines: null,
+              decoration: const InputDecoration(
+                labelText: "Your response to the accused",
+                border: OutlineInputBorder(),
+                hintText: "Describe why you took this action",
+              ),
+            )
+          ],
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+            onPressed: () async {
+              if (_replyController.text == "") {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Cannot give an empty response!"),
+                ));
+                return;
+              }
+
+              await DatabaseService().reportPost.doc(report_id).update({
+                'response_to_accused': _replyController.text,
+              });
+
+              //pop this response
+              Navigator.pop(context);
+            },
+            child: Text("Send Response"))
+      ],
     );
   }
 }
