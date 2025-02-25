@@ -7,7 +7,7 @@ class MapPickerScreen extends StatefulWidget {
 
   const MapPickerScreen({Key? key, this.initialLocation}) : super(key: key);
   // Expose the getUserLocation method via the StatefulWidget
-  Future<LatLng> getUserLocation() async {
+  Future<LatLng?> getUserLocation() async {
     // Access the state instance and call the method
     final state = _MapPickerScreenState();
     await state.getUserLocation(); // Call the method from the state
@@ -18,7 +18,7 @@ class MapPickerScreen extends StatefulWidget {
 }
 
 class _MapPickerScreenState extends State<MapPickerScreen> {
-  late LatLng currentLocation;
+  LatLng? currentLocation = LatLng(0, 0);
   late GoogleMapController mapController;
 
   @override

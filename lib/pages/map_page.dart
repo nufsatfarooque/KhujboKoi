@@ -11,7 +11,7 @@ import 'dart:ui' as ui;
 class MapPage extends StatefulWidget {
   final LatLng? address;//passed parameter
   final String addressString;
-  const MapPage({Key? key, required this.address, required this.addressString}) : super(key: key);
+  const MapPage({super.key, required this.address, required this.addressString});
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -22,20 +22,21 @@ class _MapPageState extends State<MapPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   LatLng? _currentLocation;
   String _currentLocationText = "Location : ";
-  late GoogleMapController mapController;
+  
+  GoogleMapController? mapController;
   BitmapDescriptor? customIcon; // Holds the custom icon
   Marker? _currentLocationMarker;
-  Set<Marker> _markers = {}; //store all addresses from firebase
+  final Set<Marker> _markers = {}; //store all addresses from firebase
 
 
   @override
   void initState() {
     super.initState();
-    _loadCustomMarker();
-    _markerAndCameraOnCurrLoc(widget.address, widget.addressString);//converts the address passed from home to the map loc
-    //_getUserLocation(); //Fetch the users current location
-    _fetchAddressFromFirebase(); //Fetch house addresses from firebase
-  }
+     _loadCustomMarker();//.then((_) {//loads marker before then performs rest
+      _markerAndCameraOnCurrLoc(widget.address, widget.addressString); // converts the address passed from home to the map loc
+      _fetchAddressFromFirebase(); // Fetch house addresses from firebase
+    //});
+    }
 
 
 // Load the custom marker icon
@@ -109,8 +110,8 @@ class _MapPageState extends State<MapPage> {
       _markers.add(_currentLocationMarker!);
     });
     //move camera to user's location
-    if (mapController != null && _currentLocation != null) {
-      mapController.animateCamera(
+    if (_currentLocation != null) {
+      mapController?.animateCamera(
         CameraUpdate.newCameraPosition(
           CameraPosition(target: _currentLocation!, zoom: 16),
         ),
@@ -265,7 +266,7 @@ class _MapPageState extends State<MapPage> {
     try {
       // Geocode the address
       List<geo.Location> locations = await geo.locationFromAddress(address);
-      print("The locations is :" + locations.reversed.toString());
+      print("The locations is :${locations.reversed}");
       if (locations.isNotEmpty) {
         _currentLocation = LatLng(locations.first.latitude, locations.first.longitude);
         //_markerAndCameraOnCurrLoc(_currentLocation);
@@ -312,10 +313,10 @@ class _MapPageState extends State<MapPage> {
       _markers.add(_currentLocationMarker!);
     });
     //move camera to user's location
-    if (mapController != null && currentLocation != null) {
-      mapController.animateCamera(
+    if (currentLocation != null) {
+      mapController?.animateCamera(
         CameraUpdate.newCameraPosition(
-          CameraPosition(target: currentLocation!, zoom: 16),
+          CameraPosition(target: currentLocation, zoom: 16),
         ),
       );
     }
