@@ -8,13 +8,14 @@ import 'package:khujbokoi/pages/map_page.dart';
 import 'package:khujbokoi/routes/bottomnav.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:khujbokoi/screen/onboarding_screen.dart';
 import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
 import 'package:location/location.dart' as loc;
 
 class HomePage extends StatefulWidget {
   final VoidCallback onLoginPress;
-  const HomePage({Key? key, required this.onLoginPress}) : super(key: key);
+  const HomePage({super.key, required this.onLoginPress});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -27,7 +28,7 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> filteredListings = [];
   bool isLoading = true;
   bool _isDropdownVisible = false;
-  TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
   var uuid= Uuid();
   String sessionToken = '1234';
   List<dynamic> _placesList = [];
@@ -197,7 +198,7 @@ class _HomePageState extends State<HomePage> {
     try {
       // Geocode the address
       List<Location> locations = await locationFromAddress(address);
-      print("The locations is :"+locations.reversed.toString());
+      print("The locations is :${locations.reversed}");
 
       if (locations.isNotEmpty) {
         searchLatitude = locations.first.latitude;
@@ -267,7 +268,7 @@ class _HomePageState extends State<HomePage> {
         title: const Text("KhujboKoi?", style: TextStyle(color: Colors.green)),
         backgroundColor: Colors.transparent,
         actions: [
-          Container(
+          SizedBox(
             width: 50,
             height: 50,
             child: const Icon(Icons.menu, color: Colors.green),
@@ -276,7 +277,7 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          _addressToLatlng(_controller.text); //converting the controller value to latlng and passing to map if it is not empty
+         await _addressToLatlng(_controller.text); //converting the controller value to latlng and passing to map if it is not empty
           LatLng? locationToSend = _controller.text.isEmpty ? currentLocation : controllerLatlng;
           String addressToSend = _controller.text.isEmpty ? _currentLocationString : _controller.text;
           Navigator.push(
@@ -316,13 +317,14 @@ class _HomePageState extends State<HomePage> {
                       onChanged: (value) {
                         setState(() {
                           _showList = value.isNotEmpty;
-                          if(value.isEmpty)
-                            {
-                              _filterListings(_currentLocationString);
-                            } else {
-                            _filterListings(value);
-                          }
+                          // if(value.isEmpty)
+                          //   {
+                          //     _filterListings(_currentLocationString);
+                          //   } else {
+                          //   _filterListings(value);
+                          // }
                         });
+                        getSuggestion(value);
                       },
                       onFieldSubmitted: (value) {
                         _filterListings(value);
@@ -355,7 +357,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 20),
             _controller.text == ''
-                ? Text('Current Location: ' + _currentLocationString, style: TextStyle(fontSize: 16))
+                ? Text('Current Location: $_currentLocationString', style: TextStyle(fontSize: 16))
                 : const SizedBox.shrink(),
             const SizedBox(height: 20),
             // Property Grid with Buttons
@@ -375,55 +377,65 @@ class _HomePageState extends State<HomePage> {
                           itemCount: filteredListings.length,
                           itemBuilder: (context, index){
                             var listing = filteredListings[index];
-                            return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 5),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                      child: ClipRRect(
-                                        borderRadius: const BorderRadius.only(
-                                          topLeft: Radius.circular(10),
-                                          topRight: Radius.circular(10),
-                                        ),
-                                        child: Image.memory(
-                                          listing['images'].isNotEmpty
-                                              ? listing['images'][0].bytes
-                                              : Uint8List(0),
-                                          fit: BoxFit.cover,
-                                          width: double.infinity,
-                                        ),
-                                      ),
+                            return InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(//ekhane new house view er file ta add korte hbe
+                                    builder: (context) => OnboardingScreen(),
                                   ),
-                                  Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            listing['buildingName'],
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.bold, fontSize: 16),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                );
+                              },
+                              child: Card(
+                                margin: const EdgeInsets.symmetric(vertical: 5),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                        child: ClipRRect(
+                                          borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(10),
+                                            topRight: Radius.circular(10),
                                           ),
-                                          const SizedBox(height: 5),
-                                          Text("Rent: ${listing['rent']}"),
-                                          Text("Rating: ${listing['rating']}"),
-                                          const SizedBox(height: 5),
-                                          Text(
-                                            listing['description'],
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(fontSize: 12),
+                                          child: Image.memory(
+                                            listing['images'].isNotEmpty
+                                                ? listing['images'][0].bytes
+                                                : Uint8List(0),
+                                            fit: BoxFit.cover,
+                                            width: double.infinity,
                                           ),
-                                        ],
-                                      ),
-                                  ),
-                                ],
+                                        ),
+                                    ),
+                                    Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              listing['buildingName'],
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold, fontSize: 16),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 5),
+                                            Text("Rent: ${listing['rent']}"),
+                                            Text("Rating: ${listing['rating']}"),
+                                            const SizedBox(height: 5),
+                                            Text(
+                                              listing['description'],
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(fontSize: 12),
+                                            ),
+                                          ],
+                                        ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
                           },
@@ -440,23 +452,16 @@ class _HomePageState extends State<HomePage> {
   }
 
   void onChange() {
-    if(sessionToken == null)
-      {
-        setState(() {
-          sessionToken = uuid.v4();
-        });
-      }
-
     getSuggestion(_controller.text);
   }
 
   void getSuggestion(String input) async {
-    String PLACES_API_KEY = "AIzaSyDGHhGjKrKCnYujl1YkRilpbUk2P1IMzCM";
+    String placesApiKey = "AIzaSyDGHhGjKrKCnYujl1YkRilpbUk2P1IMzCM";
     String baseURL='https://maps.googleapis.com/maps/api/place/autocomplete/json';
-    String request = '$baseURL?input=$input&key=$PLACES_API_KEY&sessiontoken=$sessionToken';
+    String request = '$baseURL?input=$input&key=$placesApiKey&sessiontoken=$sessionToken';
 
     var response = await http.get(Uri.parse(request));
-    var data = response.body.toString();
+    //var data = response.body.toString();
 
     //print('data');
     //print(data);
@@ -473,7 +478,7 @@ class _HomePageState extends State<HomePage> {
     try {
       // Geocode the address
       List<Location> locations = await locationFromAddress(address);
-      print("The latlng for address is :" + locations.reversed.toString());
+      print("The latlng for address is :${locations.reversed}");
       if (locations.isNotEmpty) {
         controllerLatlng = LatLng(locations.first.latitude, locations.first.longitude);
       }
