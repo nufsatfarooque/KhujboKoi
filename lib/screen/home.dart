@@ -1,14 +1,12 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:khujbokoi/pages/map_page.dart';
-import 'package:khujbokoi/routes/bottomnav.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:khujbokoi/screen/onboarding_screen.dart';
+import 'package:khujbokoi/screen/houseDetailsPage.dart';
 import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
 import 'package:location/location.dart' as loc;
@@ -32,13 +30,14 @@ class _HomePageState extends State<HomePage> {
   var uuid= Uuid();
   String sessionToken = '1234';
   List<dynamic> _placesList = [];
-  bool _showList = true; //visibility of listview
+  bool _showList = false; //visibility of listview
   double searchLatitude = 0.0;
   double searchLongitude = 0.0;
   LatLng? currentLocation;
   LatLng? controllerLatlng;
   late GoogleMapController mapController;
   String _currentLocationString = "";
+  String houseId = '';
 
   @override
   void initState() {
@@ -71,6 +70,7 @@ class _HomePageState extends State<HomePage> {
           Map<String, dynamic> listingData = listingDoc.data() as Map<
               String,
               dynamic>;
+              
 
           // Debug log
           print("Listing fetched: ${listingData['addressonmap']}");
@@ -84,6 +84,7 @@ class _HomePageState extends State<HomePage> {
 
           //add listings data to the list
           allListing.add({
+            'houseId': listingDoc.id,
             'buildingName': listingData['buildingName'],
             'rent': listingData['rent'],
             'description': listingData['description'],
@@ -102,30 +103,7 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-  //   Future<void> _getUserLocation() async {
-  //     try {
-  //       // Safely wait for the widget to be mounted before calling setState
-  //       if (mounted) {
-  //         final location = await gettingCurrentLocation_.getUserLocation();
-  //         setState(() {
-  //           _currentLocationString = location;
-  //           getAddressFromLatlng(_currentLocationString);
-  //         });
-  //       }
-  //     } catch (e) {
-  //       print("Error fetching user location: $e");
-  //     }
-  //     // Ensure that the widget is mounted before calling setState
-  //     // await Future.delayed(Duration.zero, () {
-  //     //   if (mounted) {
-  //     //     setState(() {
-  //     //       _currentLocationString = gettingCurrentLocation_.getUserLocation() as LatLng;
-  //     //       getAddressFromLatlng(_currentLocationString);
-  //     //     });
-  //     //   }
-  //     // });
-  //     _controller.text = '';
-  // }
+  
   Future<void> getUserLocation() async {
     loc.Location location = loc.Location();
 
@@ -204,9 +182,9 @@ class _HomePageState extends State<HomePage> {
         searchLatitude = locations.first.latitude;
         searchLongitude = locations.first.longitude;
 
-        print("Searched");
-        print(searchLatitude);
-        print(searchLongitude);
+        //print("Searched");
+        //print(searchLatitude);
+        //print(searchLongitude);
 
         // Filter listings within 5000 sq. km (70.7 km radius)
         setState(() {
@@ -221,7 +199,7 @@ class _HomePageState extends State<HomePage> {
               } else if (address is Map<String, dynamic>) {
                 position = LatLng(address['latitude'], address['longitude']);
               } else {
-                print("Invalid addressonmap format: $address");
+                //print("Invalid addressonmap format: $address");
                 return false; // Skip this listing
               }
 
@@ -229,13 +207,13 @@ class _HomePageState extends State<HomePage> {
               double distance = calculateDistance(
                   searchLatitude, searchLongitude, position.latitude, position.longitude);
 
-              print("Distance for listing: $distance km"); // Debug log
+              //print("Distance for listing: $distance km"); // Debug log
               return distance <= 70.7; // 70.7 km radius
             }
             
-            print("NULL????");
+            //print("NULL????");
             // Debugging why addressonmap might be null
-            print("Listing skipped due to null addressonmap: $listing");
+            //print("Listing skipped due to null addressonmap: $listing");
             return false; // Skip listings with null 'addressonmap'
           }).toList();
         });
@@ -334,6 +312,10 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
+             const SizedBox(height: 20),
+            _controller.text == ''
+                ? Text('Current Location: $_currentLocationString', style: TextStyle(fontSize: 16))
+                : const SizedBox.shrink(),
             if(_showList)
             Expanded(child: ListView.builder(
               itemCount: _placesList.length,
@@ -353,13 +335,11 @@ class _HomePageState extends State<HomePage> {
                     },
                     title: Text(_placesList[index]['description']),
                   );
-              })
+                },
+              ),
             ),
-            const SizedBox(height: 20),
-            _controller.text == ''
-                ? Text('Current Location: $_currentLocationString', style: TextStyle(fontSize: 16))
-                : const SizedBox.shrink(),
-            const SizedBox(height: 20),
+           
+            //const SizedBox(height: 20),
             // Property Grid with Buttons
             Expanded(
               child: isLoading
@@ -382,7 +362,11 @@ class _HomePageState extends State<HomePage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(//ekhane new house view er file ta add korte hbe
-                                    builder: (context) => OnboardingScreen(),
+                                    builder: (context) => HouseDetailsPage(
+                                      houseId: listing['houseId'],
+                                      userLatitude: currentLocation!.latitude ,
+                                      userLongitude: currentLocation!.longitude ,
+                                    ),
                                   ),
                                 );
                               },

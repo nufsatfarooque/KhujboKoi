@@ -6,6 +6,10 @@ import 'package:flutter/foundation.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  User? _user;
+
+  User? get user =>_user;
+
 
   // Initialize GoogleSignIn with Web clientId
   //final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -34,6 +38,7 @@ class AuthService {
     try {
       final cred = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
+          _user = cred.user;
       return cred.user;
     } catch (e) {
       if (kDebugMode) {

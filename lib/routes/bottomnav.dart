@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:khujbokoi/screen/reviews.dart';
+import 'package:khujbokoi/reviews/reviews.dart';
 import '../screen/notice.dart';
-import '../screen/sign_up_screen.dart';
+import '../login-signup/sign_up_screen.dart';
 import '../screen/home.dart';
 
 class BottomNav extends StatefulWidget {

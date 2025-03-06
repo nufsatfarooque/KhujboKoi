@@ -29,7 +29,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               // Icon for rent house
               SizedBox(height: 20),
-              Container(
+              SizedBox(
                 width: 200,
                 height: 200,
               child: Image.asset('assets/images/house.png')

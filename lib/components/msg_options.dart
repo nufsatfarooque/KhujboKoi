@@ -1,9 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:khujbokoi/components/button.dart';
 import 'package:khujbokoi/components/report_form.dart';
 import 'package:khujbokoi/services/database.dart';
 import 'package:flutter/material.dart';
-import 'package:khujbokoi/screen/notice.dart';
 class MsgOptions extends StatelessWidget {
   
   

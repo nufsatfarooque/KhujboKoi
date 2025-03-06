@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:khujbokoi/reviews/house_review.dart';
+import 'package:khujbokoi/reviews/restaurant_review.dart';
+import 'package:khujbokoi/reviews/upload_restaurant_info.dart';
+import '../reviews/reviews.dart';
 import '../screen/onboarding_screen.dart';
-import '../screen/login_screen.dart';
-import '../screen/sign_up_screen.dart';
+import '../login-signup/login_screen.dart';
+import '../login-signup/sign_up_screen.dart';
 import '../screen/home.dart';
-import '../screen/reviews.dart';
 import '../routes/bottomnav.dart';
 import '../screen/notice.dart';
 import '../screen/homeOwnerScreen.dart';
-import '../screen/addhouse.dart';
-import '../screen/viewListings.dart';
+import '../homeOwner/addhouse.dart';
+import '../homeOwner/viewListings.dart';
 import 'package:khujbokoi/routes/admin_bottomnav.dart';
 import 'package:khujbokoi/screen/admin_home.dart';
-import '../pages/map_page.dart';
 
 class AppRoutes{
   static const String onboardingScreen = '/onboarding_screen';
@@ -27,7 +29,9 @@ class AppRoutes{
   static const String homeowner = '/homeOwnerScreen';
   static const String addhouse = '/addhouse';
   static const String ownerlistings ='/viewListings';
-
+  static const String restaurantReview = '/restaurant_review';
+  static const String houseReview = '/house_review';
+  static const String uploadRestaurantInfo = '/upload_restaurant_info';
 
   static const String initialRoute = '/initialRoute';
 
@@ -47,6 +51,9 @@ class AppRoutes{
     homeowner: (context) => HomeOwnerScreen(),
     addhouse: (context) => AddHouse(),
     ownerlistings:(context)=> ViewListings(),
+    restaurantReview: (context) => RestaurantReview(),
+    houseReview: (context) => HouseReview(),
+    uploadRestaurantInfo: (context) => UploadRestaurantInfoScreen(),
     adminNav: (context) =>
         AdminBottomNav(), // @rafid : I added this for admin dashboard
     adminHomePage: (context) => AdminDashboard(

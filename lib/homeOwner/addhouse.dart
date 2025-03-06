@@ -1,18 +1,16 @@
-import 'dart:ffi';
 import 'dart:convert';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:typed_data';
 //import 'package:image_picker_android/image_picker_android.dart';
 //import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:khujbokoi/Widgets/AmenitiesUI.dart';
+import 'package:khujbokoi/screen/homeOwnerScreen.dart';
 import '../pages/MapPickerScreen.dart';
-import '../routes/app_routes.dart';
 final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -49,7 +47,7 @@ class _AddHouseState extends State<AddHouse> {
   int _bathrooms=0;
 
   List<MemoryImage> _imageList = [];  // List to store images for display
-  List<File> _imageFileList = [];     // List to store File objects for saving/uploading
+  final List<File> _imageFileList = [];     // List to store File objects for saving/uploading
 
 //  final ImagePicker _picker = ImagePicker();
   _selectImageFromGallery(int index) async {
@@ -82,10 +80,9 @@ class _AddHouseState extends State<AddHouse> {
       setState(() {});  // Refresh the UI to display the updated list
     }
   }
-   // For Base64 encoding
   Future<void> addListing() async {
     if (formkey.currentState!.validate()) {
-      if (_imageFileList == null || _imageFileList.isEmpty) {
+      if (_imageFileList.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please upload at least one image.')),
         );
@@ -104,39 +101,37 @@ class _AddHouseState extends State<AddHouse> {
         User? user = _auth.currentUser;
         String? username = user?.email;
 
-        // Convert images to Base64 strings from the File list (_imageFileList)
+        // Convert images to Base64 strings
         List<String> base64Images = [];
         for (var image in _imageFileList) {
-          // Read the image file as bytes
           List<int> imageBytes = await image.readAsBytes();
-
-          // Convert the bytes to a Base64 string
           String base64String = base64Encode(imageBytes);
           base64Images.add(base64String);
         }
 
-        // Add data to Firestore, including the Base64 image strings
+        // Add data to Firestore, including new fields
         DocumentReference listingRef = await _firestore.collection('listings').add({
           'buildingName': _BuildingController.text,
           'rent': _RentController.text,
-          'type': _TypeController.text,
           'description': _DescriptionController.text,
           'address': _AddressController.text,
           'username': username,
-          'images': base64Images, // Save the list of Base64-encoded images
-          'rating': 0.0, // Default rating
-          'timestamp': FieldValue.serverTimestamp(), // Add a server timestamp
+          'images': base64Images,
+          'rating': 0.0,
+          'timestamp': FieldValue.serverTimestamp(),
           'addressonmap': {
             'latitude': _selectedLocation!.latitude,
             'longitude': _selectedLocation!.longitude,
-          }, // Save selected location
+          },
+          'approved': false, // New field: Approved status
+          'bedrooms': _bedrooms, // New field: Number of bedrooms
+          'bathrooms': _bathrooms, // New field: Number of bathrooms
         });
 
-        // Add the newly created listing ID to the user's document
+        // Update the user's document in the 'users' collection
         if (user != null) {
-          // Update the user's document in the 'users' collection
           await _firestore.collection('users').doc(user.uid).update({
-            'listings': FieldValue.arrayUnion([listingRef.id]), // Add the listing ID to the user's listings array
+            'listings': FieldValue.arrayUnion([listingRef.id]),
           });
         }
 
@@ -144,16 +139,23 @@ class _AddHouseState extends State<AddHouse> {
           const SnackBar(content: Text('Listing added successfully!')),
         );
 
-        // Clear the form fields and image list after successful submission
+        // Clear form fields and reset values
         _BuildingController.clear();
         _RentController.clear();
         _TypeController.clear();
         _DescriptionController.clear();
         _AddressController.clear();
         setState(() {
-          _imageFileList.clear();  // Clear the file list (the actual files)
-          _imageList!.clear();  // Optionally clear the display list as well
+          _imageFileList.clear();
+          _imageList.clear();
+          _bedrooms = 0;
+          _bathrooms = 0;
         });
+        // Navigate to HomeOwnerScreen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeOwnerScreen()),
+        );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error adding listing: $e')),
@@ -161,6 +163,7 @@ class _AddHouseState extends State<AddHouse> {
       }
     }
   }
+
   initializeValues()
   {
     _BuildingController = TextEditingController(text: "");
@@ -227,7 +230,7 @@ class _AddHouseState extends State<AddHouse> {
                     return;
                   }
 
-                  if (_imageList!.isEmpty) {
+                  if (_imageList.isEmpty) {
                     return;
                   }
 
@@ -450,17 +453,19 @@ class _AddHouseState extends State<AddHouse> {
                                     AmenitiesUI(
                                       Type: 'Bedrooms', // Change Type to type
                                       startValue: _bedrooms,
-                                      decreaseVal: ()
-                                      {
-                                        _bedrooms!=_bedrooms!-1;
-                                        if(_bedrooms!<0)
-                                          {
-                                            _bedrooms!=0;
+                                      decreaseVal: () {
+                                        setState(() {
+                                          if (_bedrooms > 0) {
+                                            _bedrooms = _bedrooms - 1;
                                           }
+                                        });
                                       },
-                                      increaseVal: (){
-                                        _bedrooms!= _bedrooms! + 1;
+                                      increaseVal: () {
+                                        setState(() {
+                                          _bedrooms = _bedrooms + 1;
+                                        });
                                       },
+
                                     ),
                                   ],
                                 ),
@@ -473,17 +478,19 @@ class _AddHouseState extends State<AddHouse> {
                                   AmenitiesUI(
                                     Type: 'Bathrooms', // Change Type to type
                                     startValue: _bathrooms,
-                                    decreaseVal: ()
-                                    {
-                                      _bathrooms!=_bathrooms!-1;
-                                      if(_bathrooms!<0)
-                                      {
-                                        _bathrooms!=0;
-                                      }
+                                    decreaseVal: () {
+                                      setState(() {
+                                        if (_bathrooms > 0) {
+                                          _bathrooms = _bathrooms - 1;
+                                        }
+                                      });
                                     },
-                                    increaseVal: (){
-                                      _bathrooms!= _bathrooms! + 1;
+                                    increaseVal: () {
+                                      setState(() {
+                                        _bathrooms = _bathrooms + 1;
+                                      });
                                     },
+
                                   ),
                                 ],
                               ),
@@ -525,7 +532,7 @@ class _AddHouseState extends State<AddHouse> {
                                 padding: const EdgeInsets.only(top:20.0 , bottom: 25.0),
                                 child : GridView.builder(
                                     shrinkWrap: true,
-                                    itemCount: _imageList!.length+1,
+                                    itemCount: _imageList.length+1,
                                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                         crossAxisCount: 2,
                                         mainAxisSpacing: 25,
@@ -533,7 +540,7 @@ class _AddHouseState extends State<AddHouse> {
                                         childAspectRatio: 3/2,
                                     ),
                                     itemBuilder: (BuildContext context, int index) {
-                                       if(index == _imageList!.length)
+                                       if(index == _imageList.length)
                                          {
                                            return IconButton(
                                                onPressed: (){
@@ -545,7 +552,7 @@ class _AddHouseState extends State<AddHouse> {
                                        return MaterialButton(
                                            onPressed: (){},
                                            child: Image(
-                                             image: _imageList![index],
+                                             image: _imageList[index],
                                              fit: BoxFit.fill,
                                            ),
                                        );
