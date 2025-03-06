@@ -115,11 +115,30 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       children: [
                         // Approvals Pending
                         Expanded(
-                          child: StatBox(
-                            label: "Approvals pending",
-                            value: "12", // Placeholder value
-                          ),
-                        ),
+                            child: FutureBuilder<int>(
+                          future: database.countPendingApprovals(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return StatBox(
+                                label: "Approvals pending",
+                                value:
+                                    "...", // Show a placeholder while loading
+                              );
+                            }
+                            if (snapshot.hasError) {
+                              return StatBox(
+                                label: "Approvals pending",
+                                value: "Error",
+                              );
+                            }
+                            return StatBox(
+                              label: "Approvals pending",
+                              value: snapshot.data?.toString() ??
+                                  "0", // Display count or 0 if null
+                            );
+                          },
+                        )),
                         const SizedBox(width: 8.0), // Horizontal spacing
 
                         // Reports Made with Pie Chart
@@ -175,7 +194,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                           sections: [
                                             PieChartSectionData(
                                               value: userReports.toDouble(),
-                                              color: const Color.fromARGB(251, 82, 147, 127),
+                                              color: const Color.fromARGB(
+                                                  251, 82, 147, 127),
                                               title:
                                                   "Users: ${((userReports / (userReports + postReports)) * 100).toStringAsFixed(1)}%",
                                               radius: 52,
@@ -187,7 +207,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                             ),
                                             PieChartSectionData(
                                               value: postReports.toDouble(),
-                                              color: const Color.fromARGB(255, 232, 156, 93),
+                                              color: const Color.fromARGB(
+                                                  255, 232, 156, 93),
                                               title:
                                                   "Posts: ${((postReports / (userReports + postReports)) * 100).toStringAsFixed(1)}%",
                                               radius: 52,
@@ -261,8 +282,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 }
 
-
-
 class PlaceholderBox extends StatelessWidget {
   final String text;
 
@@ -297,41 +316,40 @@ class StatBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-    
       alignment: Alignment.center,
       decoration: BoxDecoration(
-                      color: Colors.green.shade100,
-                      borderRadius: BorderRadius.circular(12.0),
-                      border: Border.all(
-                        color: Colors.green.shade400,
-                        width: 2.0,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8.0,
-                          offset: const Offset(2, 2),
-                        ),
-                      ],
-                    ),
+        color: Colors.green.shade100,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(
+          color: Colors.green.shade400,
+          width: 2.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8.0,
+            offset: const Offset(2, 2),
+          ),
+        ],
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-         Text(
-  value,
-  style: const TextStyle(
-    fontSize: 66.0,
-    fontWeight: FontWeight.bold,
-    color: Colors.deepOrange, // Dark green color
-    shadows: [
-      Shadow(
-        color: Colors.black38, // Shadow color
-        blurRadius: 0.5, // How soft the shadow is
-        offset: Offset(2, 2), // Offset from the text
-      ),
-    ],
-  ),
-),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 66.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.deepOrange, // Dark green color
+              shadows: [
+                Shadow(
+                  color: Colors.black38, // Shadow color
+                  blurRadius: 0.5, // How soft the shadow is
+                  offset: Offset(2, 2), // Offset from the text
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 8.0),
           Text(
             label,

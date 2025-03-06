@@ -47,7 +47,7 @@ class _BottomNavState extends State<BottomNav> {
             },
           ),
           ReviewsPage(),
-          NoticeBoardScreen(),
+          NoticeBoardTabs(),
           SignUpScreen()
         ],
       ),

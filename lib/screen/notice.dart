@@ -1,21 +1,67 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:khujbokoi/components/button.dart';
+import 'package:khujbokoi/screen/system_notice_screen.dart';
 import 'package:khujbokoi/services/database.dart';
 import 'package:intl/intl.dart';
-import 'package:khujbokoi/services/firebase_api.dart'; // To format the timestamp
-//import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:khujbokoi/services/firebase_api.dart';
+
+class NoticeBoardTabs extends StatelessWidget {
+  const NoticeBoardTabs({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2, // Two tabs
+      child: SafeArea(
+        child: Scaffold(
+          appBar: AppBar(
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: <Color>[Color(0xFF7FE38D), Colors.white],
+                  begin: Alignment.centerRight,
+                  end: Alignment.centerLeft,
+                ),
+              ),
+            ),
+            automaticallyImplyLeading: false,
+            title: const Text('Khujbo Koi'),
+            backgroundColor: Colors.transparent,
+            bottom: const TabBar(
+              tabs: [
+                Tab(text: "Community Notices"),
+                Tab(text: "System Notices"),
+              ],
+            ),
+          ),
+          body: const TabBarView(
+            children: [
+              Center(             
+                child:  NoticeBoardScreen(), // First Tab - Your existing notice board
+),
+              Center(child: SystemNoticeScreen()), // Second Tab - Placeholder
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+
 class NoticeBoardScreen extends StatefulWidget {
   const NoticeBoardScreen({super.key});
+
   @override
-  // ignore: library_private_types_in_public_api
   _NoticeBoardScreenState createState() => _NoticeBoardScreenState();
 }
+
 class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
-  // Simulated method for adding a notice (you can integrate Firebase)
+    // Simulated method for adding a notice (you can integrate Firebase)
   @override
   void initState() {
     super.initState();
@@ -133,7 +179,6 @@ Widget build(BuildContext context) {
           ),
         ),
         automaticallyImplyLeading: false,
-        title: const Text('Khujbo Koi'),
         backgroundColor: Colors.transparent,
         actions: [
           const SizedBox(
@@ -171,6 +216,7 @@ Widget build(BuildContext context) {
                 return ListView.builder(
                   itemCount: messageList.length,
                   itemBuilder: (context, index) {
+                    database.updateLastSignedInForAllUsers();
                     DocumentSnapshot document = messageList[index];
                     Map<String, dynamic> data =
                         document.data() as Map<String, dynamic>;
@@ -184,7 +230,14 @@ Widget build(BuildContext context) {
                     int upVotes = data['upVotes'] ?? 0;
                     int downVotes = data['downVotes'] ?? 0;
                     bool liked = false;
-                    
+                    bool archived = data['archive'] ?? false;
+
+                    if(archived)
+                    {
+                      //Intentionally not removing msg from list 
+                      //need further test on that secnario : Check Technicals notebook
+                      return SizedBox.shrink();// Skip this message if archived
+                    }
                     if(dislikedBy.contains(currentUser!.uid)){
                        isDownVotedMap[messageId] = true;
                        liked = false;

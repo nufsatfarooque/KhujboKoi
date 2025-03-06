@@ -3,20 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:khujbokoi/services/database.dart';
 
-class PostReportTab extends StatefulWidget {
-  const PostReportTab({super.key});
+class UserReportTab extends StatefulWidget {
+  const UserReportTab({super.key});
 
   @override
-  State<PostReportTab> createState() => _PostReportTabState();
+  State<UserReportTab> createState() => _UserReportTabState();
 }
 
 final DatabaseService database = DatabaseService();
 
-class _PostReportTabState extends State<PostReportTab> {
+class _UserReportTabState extends State<UserReportTab> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: database.getPostReportStream(),
+      stream: database.getUserReportStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -33,33 +33,16 @@ class _PostReportTabState extends State<PostReportTab> {
           itemBuilder: (context, index) {
             final report = reports[index];
             final reportedBy = report['reported_by'];
-            final reportedPostId = report['reported_post_id'];
+            final reportedUser = report['reported_id'];
             final type = report['type'];
             final timeReported = DateFormat.yMMMd()
                 .add_jm()
                 .format(report['time_reported'].toDate());
-            final status = report['status'];
+          
             final comment = report['comment'];
             final report_id = report.id;
-
-            return FutureBuilder<DocumentSnapshot>(
-              future: database.getMessageById(reportedPostId),
-              builder: (context, messageSnapshot) {
-                if (!messageSnapshot.hasData) {
-                  return const SizedBox(); // Avoid building incomplete cards
-                }
-
-                final messageData = messageSnapshot.data!;
-                final messageText = messageData['message'];
-                final userName = messageData['userName'];
-                final timePosted = DateFormat.yMMMd()
-                    .add_jm()
-                    .format(messageData['timePosted'].toDate());
-
-                final upVotes = messageData['upVotes'];
-                final downVotes = messageData['downVotes'];
-
-                return FutureBuilder<QuerySnapshot>(
+            final status = "pending";
+             return FutureBuilder<QuerySnapshot>(
                   future: database.getUserbyUserName(reportedBy),
                   builder: (context, userSnapshot) {
                     if (!userSnapshot.hasData ||
@@ -207,46 +190,16 @@ class _PostReportTabState extends State<PostReportTab> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'User: $userName',
+                                    'User: $reportedUser',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  Text(
-                                    'Posted @: $timePosted',
-                                    style: const TextStyle(
-                                        fontSize: 12, color: Colors.grey),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    "$messageText",
-                                    style: const TextStyle(
-                                        fontSize: 14, color: Colors.black87),
-                                  ),
+                                  
                                   const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Icon(Icons.thumb_up_alt_outlined,
-                                          size: 16, color: Colors.green),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '$upVotes',
-                                        style: const TextStyle(
-                                            fontSize: 12, color: Colors.grey),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Icon(Icons.thumb_down_alt_outlined,
-                                          size: 16, color: Colors.red),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '$downVotes',
-                                        style: const TextStyle(
-                                            fontSize: 12, color: Colors.grey),
-                                      ),
-                                    ],
-                                  ),
+                                 
                                 ],
                               ),
                             ),
@@ -326,8 +279,7 @@ class _PostReportTabState extends State<PostReportTab> {
                     );
                   },
                 );
-              },
-            );
+        
           },
         );
       },

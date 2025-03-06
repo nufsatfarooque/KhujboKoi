@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
+import 'package:khujbokoi/core/property.dart'; //to import the Property class
 
 class DatabaseService{
   //get collection of
@@ -11,6 +12,7 @@ class DatabaseService{
   static const int upVoteValInc = 1;
   static const int upVoteValDec = 2;
 
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final CollectionReference messages = 
        FirebaseFirestore.instance.collection('messages');
   final CollectionReference reportPost = 
@@ -22,6 +24,9 @@ class DatabaseService{
       FirebaseFirestore.instance.collection('users'); //relates email to username
   final dailySignIns = 
         FirebaseFirestore.instance.collection('daily_sign_ins');
+
+  /// Updates all user documents in 'users' collection with last_signed_in = Timestamp.now()
+
    
   //Create
    Future<void> addMessage(String note) async {
@@ -37,12 +42,20 @@ class DatabaseService{
       'upVotes': 0,
       'userName': userName,
       "likedBy": [], // List of user IDs who liked
-      "dislikedBy": [] // List of user IDs who disliked
+      "dislikedBy": [] ,// List of user IDs who disliked
+      "archive": false,
     });
   } catch (e) {
     throw Exception('Failed to add message');
   }
 }
+
+  //Returns the users collection as a stream
+  Stream<QuerySnapshot> getUsersStream(){
+    final usersStream = 
+    userInfo.orderBy('last_signed_in',descending:  true).snapshots();
+    return usersStream;
+  }
   //Read
    Stream<QuerySnapshot> getMessagesStream(){
     final messagesStream = 
@@ -214,6 +227,17 @@ class DatabaseService{
 
     return userReportStream;
   }
+
+//Given a unique user name, retuns its UID
+Future<String> getUIDbyUserName(String userName) async {
+  QuerySnapshot userSnapshot = await userInfo.where('name', isEqualTo: userName).get();
+
+  if (userSnapshot.docs.isNotEmpty) {
+    return userSnapshot.docs[0].id; // Return the document ID of the first match
+  } else {
+    throw Exception("No user found with the username: $userName");
+  }
+}
 
   //return username given an email
   Future<String> getUserNamebyID(User? curUser) async{
@@ -391,4 +415,130 @@ Stream<Map<String, int>> getPostsWeeklyReport() {
       }
       
     }
-}
+
+    //This function will be used by admin to add a post related notice to a specififc user
+    Future<void> addNoticeForUser(String uid, Map<String, dynamic> notice) async
+    {
+      try{
+
+        //this is a general structure for nested collection .i.e sub collection in a collection
+        final noticeRef = _firestore
+                          .collection('user_system_notices')
+                          .doc(uid)
+                          .collection('notices')
+                          .doc();
+        
+        await noticeRef.set(notice);
+        if(kDebugMode)
+        {
+          print("Notice added: ${noticeRef.id}");
+        }
+
+      }catch(e){
+        print("Error adding notice:$e");
+      }
+    }
+
+    //Write by understanding when I have time
+    
+ /// Retrieve all notices for a specific user
+  Future<List<Map<String, dynamic>>> getUserNotices(String userUid) async {
+    try {
+      final snapshot = await _firestore
+          .collection('user_system_notices')
+          .doc(userUid)
+          .collection('notices')
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        print("No notices found for user: $userUid");
+        return [];
+      }
+
+      return snapshot.docs.map((doc) {
+        return {
+          'id': doc.id,
+          ...doc.data(),
+        };
+      }).toList();
+    } catch (e) {
+      print("Error retrieving notices: $e");
+      return [];
+    }
+  }
+
+  /// Mark a specific notice as read
+  Future<void> markNoticeAsRead(String userUid, String noticeId) async {
+    try {
+      final noticeRef = _firestore
+          .collection('user_system_notices')
+          .doc(userUid)
+          .collection('notices')
+          .doc(noticeId);
+
+      await noticeRef.update({'isRead': true});
+      print("Notice $noticeId marked as read.");
+    } catch (e) {
+      print("Error marking notice as read: $e");
+    }
+  }
+
+  /// Delete a specific notice for a user
+  Future<void> deleteNotice(String userUid, String noticeId) async {
+    try {
+      final noticeRef = _firestore
+          .collection('user_system_notices')
+          .doc(userUid)
+          .collection('notices')
+          .doc(noticeId);
+
+      await noticeRef.delete();
+      print("Notice $noticeId deleted.");
+    } catch (e) {
+      print("Error deleting notice: $e");
+    }
+  }
+    
+
+    Future<void> updateLastSignedInForAllUsers() async {
+    try {
+      QuerySnapshot usersSnapshot = await _firestore.collection('users').get();
+
+      for (var doc in usersSnapshot.docs) {
+        await doc.reference.update({'date_created': Timestamp.now()});
+      }
+
+      print("All users' last_signed_in updated successfully.");
+    } catch (e) {
+      print("Error updating last_signed_in: $e");
+    }
+  }
+
+  //Stream to return the collection of listings docs
+  Stream<List<Property>> getPropertiesStream()
+  {
+     return _firestore.collection('listings').snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return Property.fromFirestore(doc);
+      }).toList();
+    });
+    }
+
+  
+   //Written 24th Feb by Rafid
+   //A function to count all docs in the collection `listings` 
+   //that has approved = False
+   Future<int> countPendingApprovals() async {
+    try{
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('listings')
+                                                            .where('approved',isEqualTo: false)
+                                                            .get();
+                                    return querySnapshot.docs.length;
+    }
+    catch(e){
+        throw("Error counting pending approvals: $e");
+        
+    }
+   }
+  }
+

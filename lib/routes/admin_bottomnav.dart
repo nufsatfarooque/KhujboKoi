@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:khujbokoi/screen/admin_home.dart';
+import 'package:khujbokoi/screen/listing_approvals_panel.dart';
 import 'package:khujbokoi/screen/manage_reports_page.dart';
+import 'package:khujbokoi/screen/manage_users.dart';
 import 'package:khujbokoi/screen/reviews.dart';
 import '../screen/notice.dart';
 import '../screen/sign_up_screen.dart';
@@ -48,9 +50,9 @@ class _AdminBottomNavState extends State<AdminBottomNav> {
               onTapped(2);   //navigate to loginscreen
             },
           ),
-          ReviewsPage(),
+          ManageUsersPage(),
           ManageReportsPage(),
-          SignUpScreen()
+          ListingApprovalsPanel(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

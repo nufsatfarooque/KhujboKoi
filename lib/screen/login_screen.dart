@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:khujbokoi/core/firestore.dart';
@@ -174,6 +175,13 @@ class _LoginScreenState extends State<LoginScreen> {
     if (user != null) {
       //user successfully logged in, so keep a record of its signin in the daily_sign_in collections
       database.handleDailySignIns(user.uid);
+      
+      //Update user last sign in to user doc in users collection
+      await DatabaseService().userInfo.doc(user.uid).update({
+        'last_signed_in': Timestamp.now(),
+      });
+
+
       print("User logged in with email and password");
       final snapshot =
           await firestoreDb.collection("users").doc(user.uid).get();

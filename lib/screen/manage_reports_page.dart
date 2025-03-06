@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:khujbokoi/screen/post_report_tab.dart';
+import 'package:khujbokoi/screen/user_report_tab.dart';
 
 class ManageReportsPage extends StatefulWidget {
   const ManageReportsPage({super.key});
@@ -56,7 +57,7 @@ class _ManageReportsPageState extends State<ManageReportsPage> {
                 child: PostReportTab(),
               ),
               Center(
-                child: Text("User Reports go here"),
+                child: UserReportTab(),
               ),
             ],
           ),

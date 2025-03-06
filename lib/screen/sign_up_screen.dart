@@ -201,7 +201,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
           "name": _name.text.trim(),
           "email": user.email,
           "phoneNumber": _phone.text.trim(),
-          "role": _selectedUserType
+          "role": _selectedUserType,
+          "date_created": Timestamp.now(),
+
         };
         await firestoreDb.collection("users").doc(user.uid).set(data);
         Future.delayed(const Duration(seconds: 2), () {
