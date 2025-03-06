@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:khujbokoi/core/firestore.dart';
 import 'package:khujbokoi/services/auth_service.dart';
-import 'package:khujbokoi/screen/login_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:khujbokoi/login-signup/login_screen.dart';
 import 'dart:developer' as developer;
 
 class SignUpScreen extends StatefulWidget {

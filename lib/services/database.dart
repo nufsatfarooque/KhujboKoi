@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
 import 'package:khujbokoi/core/property.dart'; //to import the Property class
 
@@ -323,7 +322,7 @@ Stream<Map<String, int>> getPostsWeeklyReport() {
         }
 
         for (var doc in querySnapshot.docs) {
-          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+          Map<String, dynamic> data = doc.data();
           Timestamp timePosted = data['timePosted'] as Timestamp;
           String formattedDate = DateFormat('MMM-dd').format(timePosted.toDate());
           if (postsPerDay.containsKey(formattedDate)) {

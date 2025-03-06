@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../routes/app_routes.dart';
 
 class HomeOwnerScreen extends StatefulWidget{
   const HomeOwnerScreen({super.key});
@@ -52,7 +51,7 @@ class _HomeOwnerScreenState extends State<HomeOwnerScreen>{
           ),
           backgroundColor: Colors.transparent,
           actions: [
-            Container(
+            SizedBox(
               width: 50,
               height: 50,
               child: const Icon(Icons.menu, color: Colors.green, size: 35,),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart' as geo;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:khujbokoi/screen/houseDetailsPage.dart';
 import 'rental_houses.dart'; // Ensure this file contains the RentalHouse class
 import 'house_data.dart';    // Ensure this file has house data
 import 'package:flutter/services.dart';
@@ -22,6 +23,7 @@ class _MapPageState extends State<MapPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   LatLng? _currentLocation;
   String _currentLocationText = "Location : ";
+  String houseId = "";
   
   GoogleMapController? mapController;
   BitmapDescriptor? customIcon; // Holds the custom icon
@@ -127,6 +129,7 @@ class _MapPageState extends State<MapPage> {
 
       for (var doc in querySnapshot.docs) {
         Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        
         print("Fetched data: $data"); // Debugging
 
         if (data['addressonmap'] != null) {
@@ -149,7 +152,14 @@ class _MapPageState extends State<MapPage> {
             markerId: MarkerId(markerId),
             position: position,
             icon: customIcon ?? BitmapDescriptor.defaultMarker,
-            infoWindow: InfoWindow(title: data['title'] ?? "No Title"),
+            infoWindow: InfoWindow(title: data['buildingName'] ?? "No Title"),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context)=>
+              HouseDetailsPage(
+              houseId: markerId, 
+              userLatitude: _currentLocation!.latitude, 
+              userLongitude: _currentLocation!.longitude))); // Show details on marker tap
+        },
           );
 
           setState(() {
@@ -173,9 +183,7 @@ class _MapPageState extends State<MapPage> {
         position: LatLng(house.latitude, house.longitude),
         icon: BitmapDescriptor.defaultMarker,
         //customIcon ?? BitmapDescriptor.defaultMarker,  // Use custom icon if loaded
-        onTap: () {
-          _showHouseDetails(house); // Show details on marker tap
-        },
+        
       );
     }).toSet();
   }

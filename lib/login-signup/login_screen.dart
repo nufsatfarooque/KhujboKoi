@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:khujbokoi/routes/app_routes.dart';
 import 'package:khujbokoi/services/auth_service.dart';
-import 'package:khujbokoi/screen/home.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

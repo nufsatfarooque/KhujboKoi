@@ -5,7 +5,7 @@ import 'package:location/location.dart';
 class MapPickerScreen extends StatefulWidget {
   final LatLng? initialLocation;
 
-  const MapPickerScreen({Key? key, this.initialLocation}) : super(key: key);
+  const MapPickerScreen({super.key, this.initialLocation});
   // Expose the getUserLocation method via the StatefulWidget
   Future<LatLng?> getUserLocation() async {
     // Access the state instance and call the method
@@ -55,7 +55,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     });
 
     // Move the camera to the user's location
-    if (mapController != null && currentLocation != null) {
+    if (currentLocation != null) {
       mapController.animateCamera(
         CameraUpdate.newCameraPosition(
           CameraPosition(target: currentLocation!, zoom: 15),
