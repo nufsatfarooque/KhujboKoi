@@ -231,7 +231,7 @@ class _UserReportTabState extends State<UserReportTab> {
                                         borderRadius: BorderRadius.circular(10),
                                       )),
                                   child: const Text(
-                                    'Delete Post',
+                                    'Take Action',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,

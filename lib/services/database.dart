@@ -272,6 +272,17 @@ Future<String> getUIDbyUserName(String userName) async {
     }
   }
 
+    Future<QuerySnapshot> getUserbyEmail(String email) async {
+    try{
+      QuerySnapshot userSnapshot = await userInfo.where('email',isEqualTo: email).get();
+      return userSnapshot;
+    }
+    catch(e)
+    {
+      throw Exception("User with this email doesn't exist: ");
+    }
+  }
+
   //@Rafid : Newly added functions
   // Function to count total reports for posts on the current date
   Stream<int> countPostReportsToday() {
