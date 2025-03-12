@@ -40,7 +40,7 @@ class _PostReportTabState extends State<PostReportTab> {
                 .format(report['time_reported'].toDate());
             final status = report['status'];
             final comment = report['comment'];
-            final report_id = report.id;
+            final reportId = report.id;
 
             return FutureBuilder<DocumentSnapshot>(
               future: database.getMessageById(reportedPostId),
@@ -386,10 +386,10 @@ class AdminResponseToReporter extends StatelessWidget {
                 'status': "resolved",
               });
 
-              String reporter_uid = await DatabaseService()
+              String reporterUid = await DatabaseService()
                   .getUIDbyUserName(report['reported_by']);
 
-              database.addNoticeForUser(reporter_uid, {
+              database.addNoticeForUser(reporterUid, {
                 'title': 'Our response to your report ${report['comment']}',
                 'description': _replyController.text,
                 'timestamp': Timestamp.now(),

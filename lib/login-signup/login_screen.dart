@@ -1,11 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:khujbokoi/core/firestore.dart';
-import 'package:khujbokoi/routes/app_routes.dart';
 import 'package:khujbokoi/services/auth_service.dart';
-import 'package:khujbokoi/screen/home.dart';
-import 'package:khujbokoi/services/database.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -19,7 +14,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final AuthService _auth = AuthService();
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
-  final DatabaseService database = DatabaseService(); // @Rafid : Need this for proper function of admin panel
 
   @override
   void dispose() {
@@ -131,100 +125,62 @@ class _LoginScreenState extends State<LoginScreen> {
       
           
       );
+  goToHomeOwner(BuildContext context) => Navigator.pushNamed(
+    context,
+    '/homeOwnerScreen',
 
+
+  );
   goToAdminHome(BuildContext context) => Navigator.pushNamed(
-        context,
-        '/admin_nav',
-      
-          
-      );
+      context,
+      '/admin_nav',
 
-
+  );
   // Regular login with email and password
- // Navigate to the Home Screen after successful login
-  goToUser(BuildContext context) => Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => HomePage(
-                  onLoginPress: () {},
-                )),
-      );
-  // goToHomeOwner(BuildContext context) => Navigator.push(
-  //       context,
-  //       MaterialPageRoute(
-  //           builder: (context) => HomeOwnerPage(
-  //                 onLoginPress: () {},
-  //               )),
-  //     );
-  // goToRestOwner(BuildContext context) => Navigator.push(
-  //       context,
-  //       MaterialPageRoute(
-  //           builder: (context) => RestOwnerPage(
-  //                 onLoginPress: () {},
-  //               )),
-  //     );
-
-  // Regular login with email and password
-    // Regular login with email and password
   void _login() async {
     final user = await _auth.loginUserWithEmailAndPassword(
       _email.text,
       _password.text,
     );
-
     if (user != null) {
-      //user successfully logged in, so keep a record of its signin in the daily_sign_in collections
-      database.handleDailySignIns(user.uid);
-      
-      //Update user last sign in to user doc in users collection
-      await DatabaseService().userInfo.doc(user.uid).update({
-        'last_signed_in': Timestamp.now(),
-      });
-
-
-      print("User logged in with email and password");
-      final snapshot =
-          await firestoreDb.collection("users").doc(user.uid).get();
-      final data = snapshot.data();
-      print(data);
-      String role = data?["role"];
-
-      if (role == "Home Owner") {
-        //goToHomeOwner(context);
-      } else if (role == "Restaurant Owner") {
-        //goToRestOwner(context);
+      if (kDebugMode) {
+        print("User logged in with email and password");
       }
-      else if (role == "Administrator"){
-        goToAdminHome(context);
-      } else {
+
+      // Fetch the user's role from the database
+      final userRole = await _auth.getUserRole(user.uid);
+
+      // Redirect based on the role
+      if (userRole == 'User') {
+        // Navigate to the User Home screen
+        // ignore: use_build_context_synchronously
         goToHome(context);
+      } else if (userRole == 'Home Owner') {
+        // Navigate to the Home Owner screen
+        // ignore: use_build_context_synchronously
+        goToHomeOwner(context);
+      } else if (userRole == 'Restaurant Owner') {
+        // Navigate to the Restaurant Owner screen
+        // ignore: use_build_context_synchronously
+        //Navigator.pushNamed(context, '/restaurantOwnerScreen');
+      } else if (userRole == "Administrator"){
+        goToAdminHome(context);
+      }
+      else {
+        if (kDebugMode) {
+          print("Invalid role: $userRole");
+        }
       }
     } else {
-      // Show a dialog when credentials don't match
-      _showLoginErrorDialog(context);
+      if (kDebugMode) {
+        print("Email/password login failed.");
+      }
     }
-  }
 
+     
+
+  }
 }
-
-  void _showLoginErrorDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Login Failed"),
-          content: const Text("The email or password you entered is incorrect."),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text("OK"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
 
 
 

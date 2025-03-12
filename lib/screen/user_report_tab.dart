@@ -40,7 +40,7 @@ class _UserReportTabState extends State<UserReportTab> {
                 .format(report['time_reported'].toDate());
           
             final comment = report['comment'];
-            final report_id = report.id;
+            final reportId = report.id;
             final status = "pending";
              return FutureBuilder<QuerySnapshot>(
                   future: database.getUserbyUserName(reportedBy),
@@ -231,7 +231,7 @@ class _UserReportTabState extends State<UserReportTab> {
                                         borderRadius: BorderRadius.circular(10),
                                       )),
                                   child: const Text(
-                                    'Take Action',
+                                    'Delete Post',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,
@@ -338,10 +338,10 @@ class AdminResponseToReporter extends StatelessWidget {
                 'status': "resolved",
               });
 
-              String reporter_uid = await DatabaseService()
+              String reporterUid = await DatabaseService()
                   .getUIDbyUserName(report['reported_by']);
 
-              database.addNoticeForUser(reporter_uid, {
+              database.addNoticeForUser(reporterUid, {
                 'title': 'Our response to your report ${report['comment']}',
                 'description': _replyController.text,
                 'timestamp': Timestamp.now(),

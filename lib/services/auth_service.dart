@@ -5,6 +5,11 @@ import 'package:flutter/foundation.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  User? _user;
+
+  User? get user =>_user;
+
 
   // Initialize GoogleSignIn with Web clientId
   //final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -33,6 +38,7 @@ class AuthService {
     try {
       final cred = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
+          _user = cred.user;
       return cred.user;
     } catch (e) {
       if (kDebugMode) {
@@ -42,6 +48,26 @@ class AuthService {
     return null;
   }
 
+  // Fetch user role
+  Future<String?> getUserRole(String uid) async {
+    try {
+      final DocumentSnapshot userDoc =
+      await _firestore.collection('users').doc(uid).get();
+      if (userDoc.exists) {
+        return userDoc['role'] as String?;
+      } else {
+        if (kDebugMode) {
+          print("No document found for UID: $uid");
+        }
+        return null;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error fetching user role: $e");
+      }
+      return null;
+    }
+  }
   // Sign out the current user
   Future<void> signout() async {
     try {
@@ -73,7 +99,4 @@ class AuthService {
  //  }
  //  return null;
  //}
-  
-  
-  }
-
+}

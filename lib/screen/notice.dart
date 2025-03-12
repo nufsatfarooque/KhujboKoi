@@ -86,7 +86,7 @@ class _NoticeBoardScreenState extends State<NoticeBoardScreen> {
   bool isUpVoted = false;
   bool isDownVoted = false;
   void openPostBox({String? messageId}) async {
-    await FirebaseApi().initNotification();
+    //await FirebaseApi().initNotification();
     var buttonText = "Post";
     // If a messageId is provided, fetch the existing message and pre-fill the TextField
     if (messageId != null) {
@@ -206,7 +206,7 @@ Widget build(BuildContext context) {
           }
           final String currentUserName = snapshot.data!;
           //to reduce merging issue with miraj's login page, saving tokens is done here
-          msg_api.saveDeviceToken();
+          //msg_api.saveDeviceToken();
           //---------------------------------------------------------------------------
           return StreamBuilder<QuerySnapshot>(
             stream: database.getMessagesStream(),

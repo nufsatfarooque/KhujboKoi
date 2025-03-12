@@ -8,7 +8,7 @@ class Base64ImageWidget extends StatelessWidget {
   final List<String> images;
   final int index;
 
-  const Base64ImageWidget({Key? key, required this.images, required this.index}) : super(key: key);
+  const Base64ImageWidget({super.key, required this.images, required this.index});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,7 @@ class FullScreenImageView extends StatefulWidget {
   final List<String> images;
   final int initialIndex;
 
-  const FullScreenImageView({Key? key, required this.images, required this.initialIndex}) : super(key: key);
+  const FullScreenImageView({super.key, required this.images, required this.initialIndex});
 
   @override
   _FullScreenImageViewState createState() => _FullScreenImageViewState();

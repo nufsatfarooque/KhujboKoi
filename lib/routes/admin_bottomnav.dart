@@ -3,10 +3,6 @@ import 'package:khujbokoi/screen/admin_home.dart';
 import 'package:khujbokoi/screen/listing_approvals_panel.dart';
 import 'package:khujbokoi/screen/manage_reports_page.dart';
 import 'package:khujbokoi/screen/manage_users.dart';
-import 'package:khujbokoi/screen/reviews.dart';
-import '../screen/notice.dart';
-import '../screen/sign_up_screen.dart';
-import '../screen/home.dart';
 
 class AdminBottomNav extends StatefulWidget {
   const AdminBottomNav({super.key});
