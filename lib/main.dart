@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:khujbokoi/routes/bottomnav.dart';
+import 'package:khujbokoi/screen/manage_users.dart';
 import 'package:khujbokoi/services/firebase_api.dart';
 import 'firebase_options.dart';
 import 'routes/app_routes.dart';
@@ -36,6 +37,20 @@ class MyApp extends StatelessWidget {
       navigatorKey: navigatorKey,
       initialRoute: AppRoutes.initialRoute,
       routes: AppRoutes.routes, 
+        onGenerateRoute: (RouteSettings settings) {
+    if (settings.name == AppRoutes.manageUsersRoute) {
+      return MaterialPageRoute(
+        builder: (context) => ManageUsersPage(),
+        settings: settings,
+      );
+    }
+    // Handle other routes if needed.
+    return MaterialPageRoute(
+      builder: (context) => Scaffold(
+        body: Center(child: Text("No route defined for ${settings.name}")),
+      ),
+    );
+  },
       home: BottomNav(),  );
       
   }

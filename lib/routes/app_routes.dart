@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:khujbokoi/routes/admin_bottomnav.dart';
 import 'package:khujbokoi/screen/admin_home.dart';
+import 'package:khujbokoi/screen/manage_users.dart';
 import '../screen/onboarding_screen.dart';
 import '../screen/login_screen.dart';
 import '../screen/sign_up_screen.dart';
@@ -22,6 +23,7 @@ class AppRoutes {
   static const String notice = '/notices';
 
   static const String initialRoute = '/initialRoute';
+  static const String manageUsersRoute = '/manage_users';
 
   static Map<String, WidgetBuilder> routes = {
     homePage: (context) => HomePage(
@@ -35,6 +37,7 @@ class AppRoutes {
     loginScreen: (context) => LoginScreen(),
     signUpScreen: (context) => SignUpScreen(),
     onboardingScreen: (context) => OnboardingScreen(),
+    manageUsersRoute: (context) => ManageUsersPage(),
     bottomnav: (context) => BottomNav(),
     adminNav: (context) =>
         AdminBottomNav(), // @rafid : I added this for admin dashboard
