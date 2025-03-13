@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:khujbokoi/core/firestore.dart';
 import 'package:khujbokoi/routes/app_routes.dart';
 import 'package:khujbokoi/services/auth_service.dart';
@@ -173,6 +174,13 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     if (user != null) {
+
+          print("User logged in with email and password");
+      final snapshot =
+          await firestoreDb.collection("users").doc(user.uid).get();
+      final data = snapshot.data();
+      print(data);
+      String role = data?["role"];
       //user successfully logged in, so keep a record of its signin in the daily_sign_in collections
       database.handleDailySignIns(user.uid);
       
@@ -181,28 +189,46 @@ class _LoginScreenState extends State<LoginScreen> {
         'last_signed_in': Timestamp.now(),
       });
 
+      final banned = data!.containsKey("banned") ? data["banned"] : false;
 
-      print("User logged in with email and password");
-      final snapshot =
-          await firestoreDb.collection("users").doc(user.uid).get();
-      final data = snapshot.data();
-      print(data);
-      String role = data?["role"];
+     if (banned == true) {
+      // Convert the Timestamp to DateTime then format it to a String.
+      final bannedTillTimestamp = data?["banned_till"] as Timestamp;
+      final bannedTillDate = bannedTillTimestamp.toDate();
 
-      if (role == "Home Owner") {
+      if(bannedTillDate.isBefore(DateTime.now())){
+        //unban the user
+        await DatabaseService().userInfo.doc(user.uid).update({
+          'banned':false,
+          'banned_till': FieldValue.delete(),
+        });
+      }
+      else{
+             final bannedTillString = DateFormat('yyyy-MM-dd HH:mm').format(bannedTillTimestamp.toDate());
+      _showBannedMessage(context, bannedTillString);
+      return;
+      }
+ 
+    }
+  
+    if(banned == false){
+       if (role == "Home Owner") {
         //goToHomeOwner(context);
       } else if (role == "Restaurant Owner") {
         //goToRestOwner(context);
       }
       else if (role == "Administrator"){
         goToAdminHome(context);
-      } else {
+      } else if(role == "User"){
         goToHome(context);
       }
-    } else {
+       else {
       // Show a dialog when credentials don't match
       _showLoginErrorDialog(context);
     }
+    }
+    }
+     
   }
 
 }
@@ -224,6 +250,24 @@ class _LoginScreenState extends State<LoginScreen> {
       },
     );
   }
+
+  void _showBannedMessage(BuildContext context, String banned_till){
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Account Banned"),
+          content: Text("Your account has been banned till $banned_till"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  } 
 
 
 

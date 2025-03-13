@@ -1,8 +1,10 @@
 import 'dart:ffi';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:khujbokoi/routes/app_routes.dart';
 import 'package:khujbokoi/services/database.dart';
 
 class ManageUsersPage extends StatefulWidget {
@@ -15,10 +17,47 @@ class ManageUsersPage extends StatefulWidget {
 final DatabaseService database = DatabaseService();
 
 class _ManageUsersPageState extends State<ManageUsersPage> {
+
+   // Map storing GlobalKeys for each user UID
+final Map<String, GlobalKey> _userCardKeys = {};
+
+//Retrieve or create key for a user UID
+GlobalKey _getKey(String user_name){
+  if (!_userCardKeys.containsKey(user_name)){
+    _userCardKeys[user_name] = GlobalKey();
+  }
+  return _userCardKeys[user_name]!;
+}
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Check if a targetUID was passed via the route arguments
+    final targetUID = ModalRoute.of(context)?.settings.arguments as String?;
+    if (targetUID != null) {
+      // Use a post frame callback to ensure the widget is built
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final targetKey = _userCardKeys[targetUID];
+        if (targetKey != null && targetKey.currentContext != null) {
+          Scrollable.ensureVisible(
+            targetKey.currentContext!,
+            duration: const Duration(seconds: 1),
+          );
+        }
+      });
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          onPressed: (){
+            Navigator.pushNamed(context, AppRoutes.adminNav);
+          },
+          icon: const Icon(Icons.arrow_back, color: Colors.green),) ,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -69,6 +108,14 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
               final userPhnNum = userData?.containsKey('phoneNumber') == true
                   ? userData!['phoneNumber']
                   : "Not Available";
+              final userBanned = userData?.containsKey('banned') == true
+                  ? userData!['banned']
+                  : false;
+              final bannedTill = userData?.containsKey('banned_till') == true
+                  ? DateFormat.yMMMd()
+                      .add_jm()
+                      .format(userData!['banned_till'].toDate())
+                  : "Not Banned";
 
               final dateCreated = DateFormat.yMMMd()
                   .add_jm()
@@ -84,6 +131,7 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
                   final userRole = userData['role'];
 
                   return Card(
+                    key: _getKey(userName), //assign global key
                     elevation: 5,
                     color: const Color.fromARGB(255, 223, 252, 229),
                     margin:
@@ -196,6 +244,25 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
+                                  if (userBanned)
+                                    Text(
+                                      'Banned till: $bannedTill',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.red,
+                                      ),
+                                    ),
+                                  if (!userBanned)
+                                    Text(
+                                      'Not Banned',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                  
                                 ],
                               ),
                             ),
@@ -204,21 +271,25 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              ElevatedButton(
-                                onPressed: () => {},
+                                ElevatedButton(
+                                onPressed: userBanned ? null : () => {
+                                  _showBanUserDialog(context, user.id, userName),
+                                },
                                 style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.orange,
-                                    shadowColor: Colors.black,
-                                    elevation: 5,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    )),
-                                child: Text("Delete Account",
-                                 style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                      ),),
-                              ),
+                                  backgroundColor: Colors.orange,
+                                  shadowColor: Colors.black,
+                                  elevation: 5,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  )),
+                                child: Text(
+                                  userBanned ? "User Banned" : "Ban User",
+                                  style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  ),
+                                ),
+                                ),
                               SizedBox(
                                 width: 7,
                               ),
@@ -231,7 +302,7 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       )),
-                                  child: Text("Ban User",
+                                  child: Text("Delete Account",
                                    style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
@@ -250,4 +321,65 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
       ),
     );
   }
+}
+
+void _showBanUserDialog(BuildContext context,String uid ,String userName) {
+  int selectedDays = 1;
+  showDialog(
+    context: context,
+    builder: (context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text("Ban User: $userName"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text("Select ban duration (in days):"),
+                const SizedBox(height: 8),
+                DropdownButton<int>(
+                  value: selectedDays,
+                  items: [1, 3, 7, 14, 30].map((int days) {
+                    return DropdownMenuItem<int>(
+                      value: days,
+                      child: Text("$days day${days > 1 ? 's' : ''}"),
+                    );
+                  }).toList(),
+                  onChanged: (int? newValue) {
+                    setState(() {
+                      selectedDays = newValue!;
+                    });
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // cancel action
+                },
+                child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  // Call your ban user method here with the selectedDays
+                  // For example: database.banUser(userName, selectedDays);
+                  await DatabaseService().userInfo.doc(uid).update({
+                    'banned': true,
+                    'banned_till': Timestamp.now().toDate().add(Duration(days: selectedDays)),
+                  });
+                  if (kDebugMode) {
+                    print("Banning user $userName with uid $uid for  $selectedDays days");
+                  }
+
+                  Navigator.pop(context);
+                },
+                child: const Text("Ban User"),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
 }
