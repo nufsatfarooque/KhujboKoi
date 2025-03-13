@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:khujbokoi/routes/app_routes.dart';
 import 'package:khujbokoi/services/database.dart';
 
 class UserReportTab extends StatefulWidget {
@@ -211,14 +212,11 @@ class _UserReportTabState extends State<UserReportTab> {
                                 ElevatedButton(
                                   onPressed: () => {
                                     if (status == "pending")
-                                      showDialog(
-                                        context: context,
-                                        builder: (context) =>
-                                            AdminResponseToReporter(
-                                          report: report,
-                                          delete_post: true,
-                                        ),
-                                      )
+                                      Navigator.pushNamed(
+                                        context, 
+                                        AppRoutes.manageUsersRoute,
+                                        arguments:reportedUser,
+                                        )
                                   },
                                   style: ElevatedButton.styleFrom(
                                       backgroundColor:
