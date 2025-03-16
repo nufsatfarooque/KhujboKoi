@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:async/async.dart'; // Import the rxdart package
+import 'package:khujbokoi/screen/login_screen.dart';
 import 'package:khujbokoi/services/database.dart';
 import 'package:khujbokoi/components/line_chart_widget.dart';
 
@@ -21,7 +22,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   void initState() {
     super.initState();
-
+   // database.addProcessedFieldToListings();
     // Set the status bar color to green
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -33,6 +34,34 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar:  AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: <Color>[Color(0xFF7FE38D), Colors.white],
+              begin: Alignment.centerRight,
+              end: Alignment.centerLeft,
+            ),
+          ),
+        ),
+        automaticallyImplyLeading: false,
+        title: const Text("KhujboKoi?", style: TextStyle(color: Colors.green)),
+        backgroundColor: Colors.transparent,
+        actions: [
+           IconButton(
+              icon: const Icon(Icons.logout, color: Colors.green),
+              onPressed: () {
+                // Define the action to be performed when the button is pressed
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LoginScreen(),
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -44,14 +73,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "KhujboKoi?",
-                  style: TextStyle(
-                    fontSize: 24.0,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+              
                 SizedBox(height: 8.0),
                 Text(
                   "Welcome Admin",
