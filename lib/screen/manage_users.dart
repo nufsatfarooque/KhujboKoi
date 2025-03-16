@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:khujbokoi/routes/app_routes.dart';
+import 'package:khujbokoi/screen/login_screen.dart';
 import 'package:khujbokoi/services/database.dart';
 
 class ManageUsersPage extends StatefulWidget {
@@ -71,11 +72,18 @@ GlobalKey _getKey(String user_name){
         title: const Text("KhujboKoi?", style: TextStyle(color: Colors.green)),
         backgroundColor: Colors.transparent,
         actions: [
-          Container(
-            width: 50,
-            height: 50,
-            child: const Icon(Icons.menu, color: Colors.green),
-          ),
+       IconButton(
+              icon: const Icon(Icons.logout, color: Colors.green),
+              onPressed: () {
+                // Define the action to be performed when the button is pressed
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LoginScreen(),
+                  ),
+                );
+              },
+            ),
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -294,7 +302,9 @@ GlobalKey _getKey(String user_name){
                                 width: 7,
                               ),
                               ElevatedButton(
-                                  onPressed: () => {},
+                                  onPressed: userBanned ? null : () => {
+                                    _disableAccount(user.id, userName),
+                                  },
                                   style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.redAccent,
                                       shadowColor: Colors.black,
@@ -302,7 +312,8 @@ GlobalKey _getKey(String user_name){
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10),
                                       )),
-                                  child: Text("Delete Account",
+                                  child: Text(
+                                    userBanned ? "Cannot Disable" : "Disable Account",
                                    style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
@@ -369,7 +380,7 @@ void _showBanUserDialog(BuildContext context,String uid ,String userName) {
                     'banned_till': Timestamp.now().toDate().add(Duration(days: selectedDays)),
                   });
                   if (kDebugMode) {
-                    print("Banning user $userName with uid $uid for  $selectedDays days");
+                    print("Disabling user $userName with uid $uid for  $selectedDays days");
                   }
 
                   Navigator.pop(context);
@@ -382,4 +393,16 @@ void _showBanUserDialog(BuildContext context,String uid ,String userName) {
       );
     },
   );
+}
+
+void _disableAccount(String uid, String userName) async {
+  // Call your disable account method here
+  // For example: database.disableAccount(userName);
+  if (kDebugMode) {
+    print("Disabling account for user $userName with uid $uid");
+  }
+    await DatabaseService().userInfo.doc(uid).update({
+                    'banned': true,
+                    'banned_till': Timestamp.now().toDate().add(Duration(days: 3650)),
+                  });
 }
