@@ -214,6 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if(banned == false){
        if (role == "Home Owner") {
         //goToHomeOwner(context);
+        // goToHome(context); // temporary
       } else if (role == "Restaurant Owner") {
         //goToRestOwner(context);
       }
