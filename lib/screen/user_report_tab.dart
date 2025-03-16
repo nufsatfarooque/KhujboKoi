@@ -42,7 +42,10 @@ class _UserReportTabState extends State<UserReportTab> {
           
             final comment = report['comment'];
             final report_id = report.id;
-            final status = "pending";
+            final reportData = report.data() as Map<String, dynamic>;
+            final status = reportData.containsKey('status')
+                ? reportData['status']
+                : 'pending';
              return FutureBuilder<QuerySnapshot>(
                   future: database.getUserbyUserName(reportedBy),
                   builder: (context, userSnapshot) {
@@ -210,13 +213,17 @@ class _UserReportTabState extends State<UserReportTab> {
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
                                 ElevatedButton(
-                                  onPressed: () => {
-                                    if (status == "pending")
+                                  onPressed: () async => {
+                                    if (status == "pending"){
+                                      await DatabaseService().reportUser.doc(report_id).update({
+                                        'status': "resolved",
+                                      }),
                                       Navigator.pushNamed(
                                         context, 
                                         AppRoutes.manageUsersRoute,
                                         arguments:reportedUser,
                                         )
+                                    }
                                   },
                                   style: ElevatedButton.styleFrom(
                                       backgroundColor:
@@ -331,7 +338,7 @@ class AdminResponseToReporter extends StatelessWidget {
                 return;
               }
 
-              await DatabaseService().reportPost.doc(report.id).update({
+              await DatabaseService().reportUser.doc(report.id).update({
                 'response': _replyController.text,
                 'status': "resolved",
               });
@@ -349,15 +356,7 @@ class AdminResponseToReporter extends StatelessWidget {
               // ignore: use_build_context_synchronously
               Navigator.pop(context);
               //init AdminResponseToAccused and pop this form
-              if (delete_post) {
-                showDialog(
-                  // ignore: use_build_context_synchronously
-                  context: context,
-                  builder: (context) => AdminResponseToAccused(
-                    report: report,
-                  ),
-                );
-              }
+             
             },
             child: Text("Send Response"))
       ],
