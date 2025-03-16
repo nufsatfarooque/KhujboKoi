@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:khujbokoi/screen/login_screen.dart';
 import 'package:khujbokoi/screen/post_report_tab.dart';
 import 'package:khujbokoi/screen/user_report_tab.dart';
 
@@ -14,7 +15,7 @@ class _ManageReportsPageState extends State<ManageReportsPage> {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2, // Number of tabs
-      child: SafeArea(
+     
         child: Scaffold(
           appBar: AppBar(
             flexibleSpace: Container(
@@ -33,11 +34,18 @@ class _ManageReportsPageState extends State<ManageReportsPage> {
             ),
             backgroundColor: Colors.transparent,
             actions: [
-              const SizedBox(
-                width: 50,
-                height: 50,
-                child: Icon(Icons.menu, color: Colors.green),
-              ),
+             IconButton(
+              icon: const Icon(Icons.logout, color: Colors.green),
+              onPressed: () {
+                // Define the action to be performed when the button is pressed
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LoginScreen(),
+                  ),
+                );
+              },
+            ),
             ],
             bottom: const TabBar(
               tabs: [
@@ -62,7 +70,7 @@ class _ManageReportsPageState extends State<ManageReportsPage> {
             ],
           ),
         ),
-      ),
+
     );
   }
 }
