@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:khujbokoi/components/base64imagewidget.dart';
 import 'package:khujbokoi/core/property.dart';
+import 'package:khujbokoi/screen/login_screen.dart';
 import 'package:khujbokoi/services/database.dart';
 
 class ListingApprovalsPanel extends StatefulWidget {
@@ -55,11 +56,18 @@ class _ListingApprovalsPanelState extends State<ListingApprovalsPanel> {
         title: const Text("KhujboKoi?", style: TextStyle(color: Colors.green)),
         backgroundColor: Colors.transparent,
         actions: [
-          Container(
-            width: 50,
-            height: 50,
-            child: const Icon(Icons.menu, color: Colors.green),
-          ),
+        IconButton(
+              icon: const Icon(Icons.logout, color: Colors.green),
+              onPressed: () {
+                // Define the action to be performed when the button is pressed
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LoginScreen(),
+                  ),
+                );
+              },
+            ),
         ],
       ),
       body: StreamBuilder<List<Property>>(
@@ -74,9 +82,9 @@ class _ListingApprovalsPanelState extends State<ListingApprovalsPanel> {
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('No properties available'));
           }
-      
+
           List<Property> properties = snapshot.data!;
-      
+
           return ListView.builder(
             itemCount: properties.length,
             itemBuilder: (context, index) {
@@ -84,14 +92,14 @@ class _ListingApprovalsPanelState extends State<ListingApprovalsPanel> {
               final timePosted =
                   DateFormat.yMMMd().add_jm().format(property.timestamp);
               final propertyOwner = property.username;
-      
+
               return FutureBuilder<Map<String, dynamic>>(
                 future: _fetchUserData(propertyOwner),
                 builder: (context, userSnapshot) {
                   if (!userSnapshot.hasData || userSnapshot.data!.isEmpty) {
                     return const SizedBox(); // Skip rendering if user data is missing
                   }
-      
+
                   final userData = userSnapshot.data!;
                   final userRole = userData['role'] ?? 'Unknown';
                   final userPhnNumb =
@@ -169,18 +177,49 @@ class _ListingApprovalsPanelState extends State<ListingApprovalsPanel> {
                                               fontSize: 12,
                                               color: Colors.white70),
                                         ),
-                                       
                                       ],
                                     ),
                                     const SizedBox(width: 5),
                                     Column(
                                       children: [
-                                        Text(
-                                          'Approved: ${property.approved}',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.orange,
-                                            fontWeight: FontWeight.bold,
+                                        RichText(
+                                          text: TextSpan(
+                                            text: 'Approved: ',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.white, // label is white
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            children: [
+                                              TextSpan(
+                                                text: property.approved.toString(),
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: property.approved ? Colors.purple : Colors.orange,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        RichText(
+                                          text: TextSpan(
+                                            text: 'Processed: ',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.white, // label is white
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            children: [
+                                              TextSpan(
+                                                text: property.processed.toString(),
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: property.processed ? Colors.purple : Colors.orange,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ],
@@ -193,20 +232,21 @@ class _ListingApprovalsPanelState extends State<ListingApprovalsPanel> {
                           Divider(color: Colors.grey.shade300),
                           const SizedBox(height: 4),
                           Column(
-                            
                             children: [
                               Container(
-                                width:  MediaQuery.of(context).size.width , // 90% of screen width
+                                width: MediaQuery.of(context)
+                                    .size
+                                    .width, // 90% of screen width
                                 padding: const EdgeInsets.all(12),
                                 margin: const EdgeInsets.symmetric(
                                     vertical: 8, horizontal: 12),
                                 decoration: BoxDecoration(
-                                  color:const Color.fromARGB(255, 223, 252, 229), // Light greenish background
-                                  borderRadius:
-                                      BorderRadius.circular(12), // Rounded corners
+                                  color: const Color.fromARGB(255, 223, 252,
+                                      229), // Light greenish background
+                                  borderRadius: BorderRadius.circular(
+                                      12), // Rounded corners
                                   border: Border.all(
                                       color: Colors.black26), // Light border
-                                 
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -229,9 +269,9 @@ class _ListingApprovalsPanelState extends State<ListingApprovalsPanel> {
                                         ],
                                       ),
                                     ),
-                                                                
+
                                     const SizedBox(height: 6),
-                                                                
+
                                     // Building Name
                                     RichText(
                                       text: TextSpan(
@@ -250,9 +290,9 @@ class _ListingApprovalsPanelState extends State<ListingApprovalsPanel> {
                                         ],
                                       ),
                                     ),
-                                                                
+
                                     const SizedBox(height: 6),
-                                                                
+
                                     // Address
                                     RichText(
                                       text: TextSpan(
@@ -271,9 +311,9 @@ class _ListingApprovalsPanelState extends State<ListingApprovalsPanel> {
                                         ],
                                       ),
                                     ),
-                                                                
+
                                     const SizedBox(height: 6),
-                                                                
+
                                     // Description
                                     RichText(
                                       text: TextSpan(
@@ -292,9 +332,9 @@ class _ListingApprovalsPanelState extends State<ListingApprovalsPanel> {
                                         ],
                                       ),
                                     ),
-                                                                
+
                                     const SizedBox(height: 6),
-                                                                
+
                                     // Condition (when available)
                                     //if (property.condition != null) ...[
                                     //  RichText(
@@ -315,7 +355,7 @@ class _ListingApprovalsPanelState extends State<ListingApprovalsPanel> {
                                     //  ),
                                     //  const SizedBox(height: 6),
                                     //],
-                                                                
+
                                     // Rent
                                     RichText(
                                       text: TextSpan(
@@ -334,7 +374,6 @@ class _ListingApprovalsPanelState extends State<ListingApprovalsPanel> {
                                         ],
                                       ),
                                     ),
-                                
                                   ],
                                 ),
                               ),
@@ -367,19 +406,19 @@ class _ListingApprovalsPanelState extends State<ListingApprovalsPanel> {
                                       child: Text("No images available",
                                           style: TextStyle(color: Colors.grey)),
                                     ),
-                                    SizedBox(height: 6,),
+                              SizedBox(
+                                height: 6,
+                              ),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: <Widget>[
                                   ElevatedButton(
                                       onPressed: () async => {
-                                        await FirebaseFirestore.instance.collection('listings').doc(property.id).update({
-                                          'approved': true,
-                                        })
+                                        AdminResponseToApproval(property)
                                       },
                                       style: ElevatedButton.styleFrom(
                                           backgroundColor:
-                                              property.approved == false ?? true
+                                              property.processed == false ?? true
                                                   ? Colors.greenAccent
                                                   : Colors.grey,
                                           shadowColor: Colors.black,
@@ -396,10 +435,18 @@ class _ListingApprovalsPanelState extends State<ListingApprovalsPanel> {
                                     width: 7,
                                   ),
                                   ElevatedButton(
-                                      onPressed: () => {},
+                                      onPressed: () => {
+                                        showDialog(
+                                          context: context,
+                                           builder: (context) => AdminResponseToDenial(
+                                                property: property),
+                                           
+                                           )
+                                           
+                                          },
                                       style: ElevatedButton.styleFrom(
                                           backgroundColor:
-                                              property.approved == false ?? true
+                                              property.processed == false ?? true
                                                   ? Colors.redAccent
                                                   : Colors.grey,
                                           shadowColor: Colors.black,
@@ -428,4 +475,94 @@ class _ListingApprovalsPanelState extends State<ListingApprovalsPanel> {
       ),
     );
   }
+}
+
+class AdminResponseToDenial extends StatelessWidget {
+  AdminResponseToDenial({
+    super.key,
+    required this.property,
+  });
+
+  final TextEditingController _replyController = TextEditingController();
+
+  final Property property;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        "Response to denial of ${property.buildingName}",
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _replyController,
+              maxLines: null,
+              decoration: const InputDecoration(
+                labelText: "Your response to the owner request",
+                border: OutlineInputBorder(),
+                hintText: "Describe why you took this action",
+              ),
+            )
+          ],
+        ),
+      ),
+      actions: [
+        ElevatedButton(
+            onPressed: () async {
+              if (_replyController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Cannot give an empty response!"),
+                ));
+                return;
+              }
+
+              await FirebaseFirestore.instance
+                  .collection('listings')
+                  .doc(property.id)
+                  .update({
+                'approved': false,
+              });
+              // ignore: non_constant_identifier_names
+              String owner_uid =
+                  await DatabaseService().getUIDbyEmail(property.username);
+
+              database.addNoticeForUser(owner_uid, {
+                'title':
+                    'Our response to your listing request for  ${property.buildingName}',
+                'description': _replyController.text,
+                'timestamp': Timestamp.now(),
+                'isRead': false,
+              });
+
+              // ignore: use_build_context_synchronously
+              Navigator.pop(context);
+            },
+            child: Text("Send Response"))
+      ],
+    );
+  }
+}
+
+void AdminResponseToApproval(Property property) async {
+  await FirebaseFirestore.instance
+      .collection('listings')
+      .doc(property.id)
+      .update({
+    'approved': true,
+  });
+  String owner_uid =
+      await DatabaseService().getUIDbyEmail(property.username);
+
+  database.addNoticeForUser(owner_uid, {
+    'title':
+        'Our response to your listing request for  ${property.buildingName}',
+    'description':
+        'Congratulations! Your listing request for ${property.buildingName} has been approved!',
+    'timestamp': Timestamp.now(),
+    'isRead': false,
+  });
 }
