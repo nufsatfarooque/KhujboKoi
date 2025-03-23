@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
@@ -38,6 +39,7 @@ class _HomePageState extends State<HomePage> {
   late GoogleMapController mapController;
   String _currentLocationString = "";
   String houseId = '';
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
@@ -71,7 +73,7 @@ class _HomePageState extends State<HomePage> {
               String,
               dynamic>;
               
-
+          if (listingData['approved']==false || listingData['processed']==false) continue;
           // Debug log
           print("Listing fetched: ${listingData['addressonmap']}");
           // Convert Base64 images to Image widgets
@@ -189,7 +191,7 @@ class _HomePageState extends State<HomePage> {
         // Filter listings within 5000 sq. km (70.7 km radius)
         setState(() {
           filteredListings = allListing.where((listing) {
-            if (listing['addressonmap'] != null) {
+            if (listing['addressonmap'] != null ) {
               var address = listing['addressonmap'];
               LatLng position;
 
@@ -208,7 +210,7 @@ class _HomePageState extends State<HomePage> {
                   searchLatitude, searchLongitude, position.latitude, position.longitude);
 
               //print("Distance for listing: $distance km"); // Debug log
-              return distance <= 70.7; // 70.7 km radius
+              return distance <= 20; // 70.7 km radius
             }
             
             //print("NULL????");
@@ -245,13 +247,19 @@ class _HomePageState extends State<HomePage> {
         automaticallyImplyLeading: false,
         title: const Text("KhujboKoi?", style: TextStyle(color: Colors.green)),
         backgroundColor: Colors.transparent,
-        actions: [
-          SizedBox(
-            width: 50,
-            height: 50,
-            child: const Icon(Icons.menu, color: Colors.green),
-          ),
-        ],
+       // actions: [
+          // SizedBox(
+          //   width: 50,
+          //   height: 50,
+            
+          // ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout, color: Colors.green, size: 30),
+              onPressed: _logout, // Call logout function
+            ),
+          ],
+        
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -312,10 +320,43 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
+            
+            const SizedBox(height: 20),
+            // Sorting Buttons
+            Row(
+             // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    _sortListingsByRating();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.green,
+                    side: const BorderSide(color: Color.fromARGB(255, 177, 229, 179), width: 1), // Added border color
+                    minimumSize: const Size(100, 30), // Reduced button size
+                  ),
+                  child: const Text("Sort by Rating", style: TextStyle(fontSize: 12)),
+                ),
+                const SizedBox(width: 10,),
+                ElevatedButton(
+                  onPressed: () {
+                    _sortListingsByDistance();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.green,
+                    side: const BorderSide(color: Color.fromARGB(255, 177, 229, 179), width: 1), // Added border color
+                    minimumSize: const Size(100, 30), // Reduced button size
+                  ),
+                  child: const Text("Sort by Distance", style: TextStyle(fontSize: 12)),
+                ),
+              ],
+            ),
              const SizedBox(height: 20),
             _controller.text == ''
-                ? Text('Current Location: $_currentLocationString', style: TextStyle(fontSize: 16))
+                ? Text('Current Location: $_currentLocationString', style: TextStyle(fontSize: 14))
                 : const SizedBox.shrink(),
+            const SizedBox(height: 20),
+
             if(_showList)
             Expanded(child: ListView.builder(
               itemCount: _placesList.length,
@@ -406,8 +447,31 @@ class _HomePageState extends State<HomePage> {
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                             const SizedBox(height: 5),
-                                            Text("Rent: ${listing['rent']}"),
-                                            Text("Rating: ${listing['rating']}"),
+                                            // Rent with Icon
+                                            Row(
+                                              children: [
+                                                const Icon(Icons.attach_money, color: Colors.green, size: 18),
+                                                const SizedBox(width: 5),
+                                                Text(
+                                                  "Rent: ${listing['rent']}",
+                                                  style: const TextStyle(fontSize: 14),
+                                                ),
+                                              ],
+                                            ),
+
+                                            // Rating with Icon
+                                            Row(
+                                              children: [
+                                                const Icon(Icons.star, color: Colors.amber, size: 18),
+                                                const SizedBox(width: 5),
+                                                Text(
+                                                  "Rating: ${listing['rating']}",
+                                                  style: const TextStyle(fontSize: 14),
+                                                ),
+                                              ],
+                                            ),
+                                            
+                                          
                                             const SizedBox(height: 5),
                                             Text(
                                               listing['description'],
@@ -439,6 +503,34 @@ class _HomePageState extends State<HomePage> {
     getSuggestion(_controller.text);
   }
 
+  //logout
+  Future<void> _logout() async {
+    bool confirmLogout = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Logout"),
+          content: const Text("Are you sure you want to logout?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false), // No
+              child: const Text("No"),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true), // Yes
+              child: const Text("Yes"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmLogout == true) {
+      await _auth.signOut(); // Sign out the user
+      Navigator.pop(context); // Go back to the previous screen (login page)
+    }
+  }
+
   void getSuggestion(String input) async {
     String placesApiKey = "AIzaSyDGHhGjKrKCnYujl1YkRilpbUk2P1IMzCM";
     String baseURL='https://maps.googleapis.com/maps/api/place/autocomplete/json';
@@ -457,6 +549,7 @@ class _HomePageState extends State<HomePage> {
       throw Exception('Failed to load data');
     }
   }
+  
   //convert address from places api to latlng value
   Future<void> _addressToLatlng(String address) async {
     try {
@@ -470,6 +563,51 @@ class _HomePageState extends State<HomePage> {
       print("Error converting address: $e");
     }
   }
+
+  // Sorting by Rating (High to Low)
+void _sortListingsByRating() {
+  setState(() {
+    filteredListings.sort((a, b) {
+      var ratingA = a['rating'] ?? 0.0;
+      var ratingB = b['rating'] ?? 0.0;
+      return ratingB.compareTo(ratingA); // Sort in descending order
+    });
+  });
+}
+
+// Sorting by Distance (Closest First)
+void _sortListingsByDistance() {
+  setState(() {
+    filteredListings.sort((a, b) {
+      LatLng positionA = _getLatLngFromAddress(a['addressonmap']);
+      LatLng positionB = _getLatLngFromAddress(b['addressonmap']);
+      double distanceA = calculateDistance(
+        currentLocation!.latitude,
+        currentLocation!.longitude,
+        positionA.latitude,
+        positionA.longitude,
+      );
+      double distanceB = calculateDistance(
+        currentLocation!.latitude,
+        currentLocation!.longitude,
+        positionB.latitude,
+        positionB.longitude,
+      );
+      return distanceA.compareTo(distanceB); // Sort in ascending order
+    });
+  });
+}
+
+// Helper to get LatLng from addressonmap
+LatLng _getLatLngFromAddress(dynamic address) {
+  if (address is GeoPoint) {
+    return LatLng(address.latitude, address.longitude);
+  } else if (address is Map<String, dynamic>) {
+    return LatLng(address['latitude'], address['longitude']);
+  } else {
+    throw Exception("Invalid addressonmap format");
+  }
+}
 }
 
 

@@ -38,8 +38,8 @@ Future<void> registerServices() async {
   //   StorageService(),
   // );
 
-  getIt.registerSingleton<DatabaseService>(
-    DatabaseService(),
+  getIt.registerSingleton<MueedDatabaseService>(
+    MueedDatabaseService(),
   );
 }
 

@@ -1,10 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:get_it/get_it.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:khujbokoi/chat%20screen/models/user_profile.dart';
 import 'dart:convert';
-import 'package:khujbokoi/chat%20screen/pages/chat_page.dart';
+
+import 'package:khujbokoi/screen/chatScreen.dart';
 
 class HouseDetailsPage extends StatefulWidget {
   final String houseId;
@@ -23,15 +26,21 @@ class HouseDetailsPage extends StatefulWidget {
 }
 
 class _HouseDetailsPageState extends State<HouseDetailsPage> {
+  final GetIt _getIt=GetIt.instance;
   Map<String, dynamic> houseDetails = {};
   double distance = 0.0;
   LatLng position = LatLng(0.0, 0.0);
   int currentPage = 0;
+  List<Map<String, dynamic>>? _reviews;
+   double _userRating = 0.0;
+  final TextEditingController _reviewController = TextEditingController();
+  double _averageRating = 0.0;
 
   @override
   void initState() {
     super.initState();
     getHouseDetails();
+    fetchReviewsAndRatings();
   }
 
   //chatgpt gave this
@@ -92,14 +101,116 @@ class _HouseDetailsPageState extends State<HouseDetailsPage> {
       print('Error fetching house details: $e');
     }
   }
+  
+  Future<void> fetchReviewsAndRatings() async {
+    try {
+      DocumentSnapshot house = await FirebaseFirestore.instance
+          .collection('listings')
+          .doc(widget.houseId)
+          .get();
+
+      if (house.exists) {
+        setState(() {
+          _reviews = (house['reviews'] as List<dynamic>?)
+              ?.map((e) => e as Map<String, dynamic>)
+              .toList();
+          List<dynamic>? ratings = house['ratings'] as List<dynamic>?;
+          if (ratings != null && ratings.isNotEmpty) {
+            _averageRating = ratings.reduce((a, b) => a + b) / ratings.length;
+            
+          }
+        });
+        await FirebaseFirestore.instance
+            .collection('listings')
+            .doc(widget.houseId)
+            .update({'rating': _averageRating});
+      }
+    } catch (e) {
+      print('Error fetching reviews and ratings: $e');
+    }
+  }
+
+  Future<void> submitReview(String content, double rating) async {
+     try {
+      final firestore = FirebaseFirestore.instance;
+
+      // Add the review and rating to the database
+      await firestore.collection('listings').doc(widget.houseId).update({
+        'reviews': FieldValue.arrayUnion([
+          {
+            'content': content,
+            'rating': rating,
+            'timestamp': Timestamp.now(),
+          }
+        ]),
+        'ratings': FieldValue.arrayUnion([rating]),
+      });
+
+      // Refresh the reviews and ratings
+      fetchReviewsAndRatings();
+
+      // Clear the input fields
+      _reviewController.clear();
+      setState(() {
+        _userRating = 0.0;
+      });
+
+    //   final firestore = FirebaseFirestore.instance;
+    //   // Fetch the current ratings array
+    //   DocumentSnapshot house = await firestore.collection('listings').doc(widget.houseId).get();
+    //   // Initialize the ratings array if it doesn't exist
+    //   List<dynamic> currentRatings = [];
+    //   if (house.exists && house['ratings'] != null) {
+    //     currentRatings = house['ratings'] as List<dynamic>;
+    //   }
+    //    // Add the new rating to the existing ratings array
+    //   currentRatings.add(rating);
+    //   // Add the review and rating to the database
+    //   await firestore.collection('listings').doc(widget.houseId).update({
+    //     'reviews': FieldValue.arrayUnion([
+    //       {
+    //         'content': content,
+    //         'rating': rating,
+    //         'timestamp': Timestamp.now(),
+    //       }
+    //     ]),
+    //     'ratings': currentRatings,
+    //   });
+
+    
+
+    
+    } catch (e) {
+      print('Error submitting review: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     if (houseDetails.isEmpty) {
-      return Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
+  return Scaffold(
+    body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            color: Colors.green, // Matches your theme
+            strokeWidth: 4,      // Slightly thicker for visibility
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            "Fetching house details...",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.black54,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 
     return Scaffold(
       //backgroundColor: const Color.fromARGB(255, 240, 240, 240),
@@ -113,7 +224,7 @@ class _HouseDetailsPageState extends State<HouseDetailsPage> {
             ),
           ),
         ),
-        title: const Text("KhujboKoi?", style: TextStyle(color: Colors.green)),
+        title: Text(houseDetails['buildingName'], style: TextStyle(color: Colors.green, fontSize: 26)),
         backgroundColor: Colors.transparent,
         actions: const [
           SizedBox(
@@ -130,7 +241,7 @@ class _HouseDetailsPageState extends State<HouseDetailsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildNameCard(Icons.home, "Name", houseDetails['buildingName'] ?? "No name"),
+             
               SizedBox(height: 10),
               if (houseDetails['images'] != null && houseDetails['images'] is List && (houseDetails['images'] as List).isNotEmpty)
                 Column(
@@ -180,10 +291,10 @@ class _HouseDetailsPageState extends State<HouseDetailsPage> {
                   ],
                 ),
               SizedBox(height: 16),
-              // _buildInfoCard(Icons.home, "Name", houseDetails['buildingName'] ?? "No name"),
+               _buildInfoCard(Icons.home, "Name", houseDetails['buildingName'] ?? "No name"),
               _buildInfoRow([
                 _buildInfoCard(Icons.category, "Type", houseDetails['type'] ?? "N/A"),
-                _buildInfoCard(Icons.star, "Rating", houseDetails['rating']?.toString() ?? "N/A"),
+               
               ]),
               _buildInfoRow([
                 _buildInfoCard(Icons.bed, "Bedrooms", houseDetails['bedrooms']?.toString() ?? "N/A"),
@@ -207,7 +318,12 @@ class _HouseDetailsPageState extends State<HouseDetailsPage> {
                   ),
                 ),
               ),
+              
               SizedBox(height: 20),
+
+               _buildReviewSection(),
+
+              const SizedBox(height: 16),
               
               SizedBox(
                 width: double.infinity,
@@ -223,26 +339,45 @@ class _HouseDetailsPageState extends State<HouseDetailsPage> {
                   //Chatgpt gave this
                   onPressed: () async {
                     if (houseDetails['username'] != null) {
-                      UserProfile? ownerProfile = await getUserProfile(houseDetails['username']);
-                      if (ownerProfile != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                          builder: (context) => ChatPage(chatUser: ownerProfile),
-                          ),
-                        );
-                      } else {
+                      try {
+                        // Fetch the ownerId using the username (email)
+                        QuerySnapshot userSnapshot = await FirebaseFirestore.instance
+                            .collection('users')
+                            .where('email', isEqualTo: houseDetails['username'])
+                            .limit(1)
+                            .get();
+
+                        if (userSnapshot.docs.isNotEmpty) {
+                          String ownerId = userSnapshot.docs.first.id; // Get the document ID as ownerId
+
+                          // Navigate to the ChatScreen with the ownerId
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChatScreen(
+                                houseId: widget.houseId,
+                                ownerId: ownerId,
+                              ),
+                            ),
+                          );
+                        } else {
+                          // Handle case where no user is found
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Owner not found.')),
+                          );
+                        }
+                      } catch (e) {
+                        print('Error fetching ownerId: $e');
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("User not found")),
+                          const SnackBar(content: Text('Failed to fetch owner details.')),
                         );
                       }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Owner username not available.')),
+                      );
                     }
                   },
-
-
-                  // onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => ChatPage(
-                  //     chatUser: houseDetails['username'],
-                  // ))),
                   icon: Icon(Icons.chat),
                   label: Text("Chat with Owner", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ),
@@ -254,7 +389,100 @@ class _HouseDetailsPageState extends State<HouseDetailsPage> {
       ),
     );
   }
+  Widget _buildReviewSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Average Rating: ${_averageRating.toStringAsFixed(1)} / 5',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _reviewController,
+          decoration: const InputDecoration(
+            labelText: 'Write a Review',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.comment, color: Colors.green),
+          ),
+          maxLines: null,
+        ),
+        const SizedBox(height: 16),
+        _buildStarRating(),
+        const SizedBox(height: 16),
+        Center(
+          child: ElevatedButton(
+            onPressed: () {
+              final reviewContent = _reviewController.text;
+              if (reviewContent.isNotEmpty && _userRating > 0) {
+                submitReview(reviewContent, _userRating);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            ),
+            child: const Text('Submit Review', style: TextStyle(fontSize: 16, color: Colors.white)),
+          ),
+        ),
+        const SizedBox(height: 10),
+        const Divider(thickness: 1.0),
+        const SizedBox(height: 16),
+        Text(
+          'Reviews',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        if (_reviews != null && _reviews!.isNotEmpty)
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _reviews!.length,
+            itemBuilder: (context, index) {
+              final review = _reviews![index];
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                child: ListTile( 
+                  title: Row(
+                    children: [
+                      Icon(Icons.star, color: Colors.amber, size: 16, ),
+                      
+                      Text('${review['rating']} / 5'),
+                    ],
+                  ),
+                  subtitle: Text(review['content']),
+                  trailing: Text(
+                    DateFormat('yyyy-MM-dd').format((review['timestamp'] as Timestamp).toDate()),
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ),
+              );
+            },
+          )
+        else
+          const Text('No reviews yet. Be the first to review!'),
+      ],
+    );
+  }
 
+  Widget _buildStarRating() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(5, (index) {
+        return GestureDetector(
+          onTap: () => setState(() => _userRating = index + 1.0),
+          child: Icon(
+            index < _userRating ? Icons.star : Icons.star_border,
+            color: Colors.amber,
+            size: 32,
+          ),
+        );
+      }),
+    );
+  }
   Widget _buildInfoCard(IconData icon, String title, String value) {
     return Card(
       margin: EdgeInsets.symmetric(vertical: 6),

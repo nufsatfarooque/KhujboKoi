@@ -8,6 +8,7 @@ class Property {
   final double latitude;
   final double longitude;
   final bool approved;
+  final bool processed;
   final String buildingName;
   final String description;
   final List<String> images;
@@ -23,6 +24,7 @@ class Property {
     required this.latitude,
     required this.longitude,
     required this.approved,
+    required this.processed,
     required this.buildingName,
     required this.description,
     required this.images,
@@ -42,6 +44,7 @@ class Property {
       latitude: (data['latitude'] ?? 0).toDouble(),
       longitude: (data['longitude'] ?? 0).toDouble(),
       approved: data['approved'] ?? false,
+      processed: data['processed'] ?? false,
       buildingName: data['buildingName'] ?? '',
       description: data['description'] ?? '',
       images: List<String>.from(data['images'] ?? []),

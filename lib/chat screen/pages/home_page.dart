@@ -19,14 +19,14 @@ class _HomepageState extends State<Homepage> {
 
   late AuthService _authService;
   late NavigationService _navigationService;
-  late DatabaseService _databaseService;
+  late MueedDatabaseService _databaseService;
 
   @override
   void initState() {
     super.initState();
     _authService = _getIt.get<AuthService>();
     _navigationService = _getIt.get<NavigationService>();
-    _databaseService = _getIt.get<DatabaseService>();
+    _databaseService = _getIt.get<MueedDatabaseService>();
   }
 
   @override

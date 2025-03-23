@@ -9,8 +9,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:khujbokoi/Widgets/AmenitiesUI.dart';
-import 'package:khujbokoi/screen/homeOwnerScreen.dart';
+import 'package:khujbokoi/homeOwner/homeOwnerScreen.dart';
 import '../pages/MapPickerScreen.dart';
+import '../services/rent_predictor.dart';
+import '../services/data_service.dart';
 final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -109,12 +111,13 @@ class _AddHouseState extends State<AddHouse> {
           base64Images.add(base64String);
         }
 
-        // Add data to Firestore, including new fields
+        // Add data to Firestore, including the amenities field
         DocumentReference listingRef = await _firestore.collection('listings').add({
           'buildingName': _BuildingController.text,
           'rent': _RentController.text,
           'description': _DescriptionController.text,
           'address': _AddressController.text,
+          'amenities': _AmenitiesController.text, // Add amenities field
           'username': username,
           'images': base64Images,
           'rating': 0.0,
@@ -123,9 +126,10 @@ class _AddHouseState extends State<AddHouse> {
             'latitude': _selectedLocation!.latitude,
             'longitude': _selectedLocation!.longitude,
           },
-          'approved': false, // New field: Approved status
-          'bedrooms': _bedrooms, // New field: Number of bedrooms
-          'bathrooms': _bathrooms, // New field: Number of bathrooms
+          'approved': false,
+          'bedrooms': _bedrooms,
+          'bathrooms': _bathrooms,
+          'rentStatus': 0, // Default rentStatus
         });
 
         // Update the user's document in the 'users' collection
@@ -145,12 +149,14 @@ class _AddHouseState extends State<AddHouse> {
         _TypeController.clear();
         _DescriptionController.clear();
         _AddressController.clear();
+        _AmenitiesController.clear(); // Clear amenities field
         setState(() {
           _imageFileList.clear();
           _imageList.clear();
           _bedrooms = 0;
           _bathrooms = 0;
         });
+
         // Navigate to HomeOwnerScreen
         Navigator.pushReplacement(
           context,
@@ -430,6 +436,7 @@ class _AddHouseState extends State<AddHouse> {
                                             "Lng: ${_selectedLocation!.longitude.toStringAsFixed(4)}",
                                       ),
                                     ),
+
                                 ],
                               ),
                             ),

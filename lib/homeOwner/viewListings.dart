@@ -1,8 +1,11 @@
+// lib/homeOwner/viewListings.dart
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:khujbokoi/homeOwner/EditListings.dart';
+import '../services/rent_predictor.dart'; // Import RentPredictor
+
 class ViewListings extends StatefulWidget {
   const ViewListings({super.key});
 
@@ -13,16 +16,18 @@ class ViewListings extends StatefulWidget {
 class _ViewListingsState extends State<ViewListings> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final RentPredictor _rentPredictor = RentPredictor(); // Initialize RentPredictor
   List<Map<String, dynamic>> userListings = []; // To store user listings
   bool isLoading = true; // To manage loading state
 
   @override
   void initState() {
     super.initState();
+    _rentPredictor.loadModel(); // Load the model coefficients from Firestore
     _fetchUserListings(); // Fetch the listings when the screen is loaded
   }
 
-  // Fetch user's listings
+  // Fetch user's listings and predict rents
   Future<void> _fetchUserListings() async {
     try {
       User? user = _auth.currentUser;
@@ -34,33 +39,45 @@ class _ViewListingsState extends State<ViewListings> {
           userListings.clear(); // Clear previous listings before adding new ones
 
           for (String listingId in listingIds) {
-            DocumentSnapshot listingDoc =
-            await _firestore.collection('listings').doc(listingId).get();
+            DocumentSnapshot listingDoc = await _firestore.collection('listings').doc(listingId).get();
 
             if (listingDoc.exists) {
               Map<String, dynamic> listingData = listingDoc.data() as Map<String, dynamic>;
 
-              // Ensure images are stored as Strings, not MemoryImage
-              List<String> base64Images = List<String>.from(listingData['images'] ?? []);
+              // Only add listings with rentStatus: 0
+              if (listingData['rentStatus'] == 0) {
+                // Predict rent using RentPredictor
+                double predictedRent = _rentPredictor.predictRent(
+                  bedrooms: listingData['bedrooms'] ?? 0,
+                  bathrooms: listingData['bathrooms'] ?? 0,
+                  latitude: listingData['addressonmap']?['latitude'] ?? 0.0,
+                  longitude: listingData['addressonmap']?['longitude'] ?? 0.0,
+                );
 
-              userListings.add({
-                'id': listingId,
-                'buildingName': listingData['buildingName'] ?? "Unknown",
-                'rent': listingData['rent'] ?? "N/A",
-                'description': listingData['description'] ?? "No Description",
-                'address': listingData['address'] ?? "No Address",
-                'images': base64Images, // Store Base64 Strings
-                'rating': listingData['rating'] ?? 0.0,
-                'bedrooms': listingData['bedrooms'] ?? 0,
-                'bathrooms': listingData['bathrooms'] ?? 0,
-                'approved': listingData['approved'] ?? false,
-              });
+                userListings.add({
+                  'id': listingId,
+                  'buildingName': listingData['buildingName'] ?? "Unknown",
+                  'rent': listingData['rent'] ?? "N/A",
+                  'description': listingData['description'] ?? "No Description",
+                  'address': listingData['address'] ?? "No Address",
+                  'images': List<String>.from(listingData['images'] ?? []),
+                  'rating': listingData['rating'] ?? 0.0,
+                  'bedrooms': listingData['bedrooms'] ?? 0,
+                  'bathrooms': listingData['bathrooms'] ?? 0,
+                  'approved': listingData['approved'] ?? false,
+                  'rentStatus': listingData['rentStatus'] ?? 0,
+                  'predictedRent': predictedRent, // Add predicted rent
+                });
+              }
             }
           }
         }
       }
     } catch (e) {
       print("Error fetching listings: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error fetching listings: $e")),
+      );
     } finally {
       setState(() {
         isLoading = false;
@@ -87,9 +104,11 @@ class _ViewListingsState extends State<ViewListings> {
       }
     } catch (e) {
       print("Error deleting listing: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error deleting listing: $e")),
+      );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -107,6 +126,8 @@ class _ViewListingsState extends State<ViewListings> {
         itemCount: userListings.length,
         itemBuilder: (context, index) {
           var listing = userListings[index];
+          bool isApproved = listing['approved'] ?? false; // Check if the listing is approved
+
           return Card(
             elevation: 5,
             shape: RoundedRectangleBorder(
@@ -153,6 +174,22 @@ class _ViewListingsState extends State<ViewListings> {
                       Text(
                         "${listing['rent']} TK / month",
                         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  // Predicted Rent
+                  Row(
+                    children: [
+                      const Icon(Icons.trending_up, color: Colors.green, size: 18),
+                      const SizedBox(width: 5),
+                      Text(
+                        "Suggested: ${listing['predictedRent'].round()} TK",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
                       ),
                     ],
                   ),
@@ -240,20 +277,27 @@ class _ViewListingsState extends State<ViewListings> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      // Edit Button
                       ElevatedButton.icon(
                         icon: const Icon(Icons.edit, color: Colors.white),
                         label: const Text("Edit"),
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                        onPressed: () {
-                          Navigator.push(
+                        onPressed: () async {
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => EditListingScreen(listingId: listing['id']),
                             ),
                           );
-                        },
 
+                          // Refresh the list if the listing was updated
+                          if (result == true) {
+                            _fetchUserListings();
+                          }
+                        },
                       ),
+
+                      // Delete Button
                       ElevatedButton.icon(
                         icon: const Icon(Icons.delete, color: Colors.white),
                         label: const Text("Delete"),
@@ -261,6 +305,28 @@ class _ViewListingsState extends State<ViewListings> {
                         onPressed: () => deleteListing(listing['id']),
                       ),
                     ],
+                  ),
+
+                  // ✅ Mark as Rented Button (on a new line)
+                  Center(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.check, color: Colors.white),
+                      label: const Text("Mark as Rented"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isApproved ? Colors.green : Colors.grey, // Grey if not approved
+                      ),
+                      onPressed: isApproved
+                          ? () async {
+                        await _firestore.collection('listings').doc(listing['id']).update({
+                          'rentStatus': 1, // Update rentStatus to 1 (rented)
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Property marked as rented")),
+                        );
+                        _fetchUserListings(); // Refresh the list
+                      }
+                          : null, // Disable button if not approved
+                    ),
                   ),
                 ],
               ),

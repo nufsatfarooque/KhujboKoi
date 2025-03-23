@@ -23,6 +23,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
   final TextEditingController _rentController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _amenitiesController = TextEditingController(); // New controller for amenities
 
   int _bedrooms = 0;
   int _bathrooms = 0;
@@ -48,6 +49,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
           _rentController.text = data['rent'] ?? "";
           _addressController.text = data['address'] ?? "";
           _descriptionController.text = data['description'] ?? "";
+          _amenitiesController.text = data['amenities'] ?? ""; // Fetch amenities
           _bedrooms = data['bedrooms'] ?? 0;
           _bathrooms = data['bathrooms'] ?? 0;
           base64Images = List<String>.from(data['images'] ?? []);
@@ -62,7 +64,7 @@ class _EditListingScreenState extends State<EditListingScreen> {
     }
   }
 
-  // 📌 Function to pick an image and convert it to Base64
+  // Function to pick an image and convert it to Base64
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
@@ -75,14 +77,14 @@ class _EditListingScreenState extends State<EditListingScreen> {
     }
   }
 
-  // 🗑 Function to delete an image from the list
+  // Function to delete an image from the list
   void _deleteImage(int index) {
     setState(() {
       base64Images.removeAt(index);
     });
   }
 
-  // ✅ Function to update listing with new images
+  // Function to update listing with new images
   Future<void> _updateListing() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -92,16 +94,18 @@ class _EditListingScreenState extends State<EditListingScreen> {
         'rent': _rentController.text,
         'address': _addressController.text,
         'description': _descriptionController.text,
+        'amenities': _amenitiesController.text, // Save amenities
         'bedrooms': _bedrooms,
         'bathrooms': _bathrooms,
-        'images': base64Images, // ✅ Save updated image list
+        'images': base64Images,
+        'approved': false, // Reset approval status
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Listing updated successfully!")),
+        const SnackBar(content: Text("Listing updated successfully! Pending approval.")),
       );
 
-      Navigator.pop(context);
+      Navigator.pop(context, true); // Return true to indicate success
     } catch (e) {
       print("Error updating listing: $e");
     }
@@ -164,37 +168,44 @@ class _EditListingScreenState extends State<EditListingScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                // 🛏 Bedrooms & 🚿 Bathrooms
+                // 🛋 Amenities
+                TextFormField(
+                  controller: _amenitiesController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(labelText: "Amenities"),
+                  validator: (value) => value!.isEmpty ? "Enter amenities" : null,
+                ),
+                const SizedBox(height: 10),
+
+                // 🛏 Bedrooms
+                const Text("Bedrooms", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        const Text("Bedrooms: "),
-                        IconButton(
-                          icon: const Icon(Icons.remove),
-                          onPressed: () => setState(() => _bedrooms = (_bedrooms > 0) ? _bedrooms - 1 : 0),
-                        ),
-                        Text("$_bedrooms"),
-                        IconButton(
-                          icon: const Icon(Icons.add),
-                          onPressed: () => setState(() => _bedrooms++),
-                        ),
-                      ],
+                    IconButton(
+                      icon: const Icon(Icons.remove),
+                      onPressed: () => setState(() => _bedrooms = (_bedrooms > 0) ? _bedrooms - 1 : 0),
                     ),
-                    Row(
-                      children: [
-                        const Text("Bathrooms: "),
-                        IconButton(
-                          icon: const Icon(Icons.remove),
-                          onPressed: () => setState(() => _bathrooms = (_bathrooms > 0) ? _bathrooms - 1 : 0),
-                        ),
-                        Text("$_bathrooms"),
-                        IconButton(
-                          icon: const Icon(Icons.add),
-                          onPressed: () => setState(() => _bathrooms++),
-                        ),
-                      ],
+                    Text("$_bedrooms"),
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: () => setState(() => _bedrooms++),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+
+                // 🚿 Bathrooms (on the next line)
+                const Text("Bathrooms", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove),
+                      onPressed: () => setState(() => _bathrooms = (_bathrooms > 0) ? _bathrooms - 1 : 0),
+                    ),
+                    Text("$_bathrooms"),
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: () => setState(() => _bathrooms++),
                     ),
                   ],
                 ),

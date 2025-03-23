@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:khujbokoi/routes/bottomnav.dart';
+import 'package:khujbokoi/screen/manage_users.dart';
 import 'firebase_options.dart';
 import 'routes/app_routes.dart';
 var globalMessengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -44,7 +45,23 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       initialRoute: AppRoutes.initialRoute,
-      routes: AppRoutes.routes, 
+
+      routes: AppRoutes.routes,
+      onGenerateRoute: (RouteSettings settings) {
+        if (settings.name == AppRoutes.manageUsersRoute) {
+          return MaterialPageRoute(
+            builder: (context) => ManageUsersPage(),
+            settings: settings,
+          );
+        }
+        // Handle other routes if needed.
+        return MaterialPageRoute(
+          builder: (context) => Scaffold(
+            body: Center(child: Text("No route defined for ${settings.name}")),
+          ),
+        );
+      },
+
       home: BottomNav(),  );
   }
 }

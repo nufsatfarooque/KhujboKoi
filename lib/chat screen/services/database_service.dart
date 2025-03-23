@@ -6,7 +6,7 @@ import 'package:khujbokoi/chat%20screen/models/user_profile.dart';
 import 'package:khujbokoi/chat%20screen/utils.dart';
 import 'package:khujbokoi/services/auth_service.dart';
 
-class DatabaseService {
+class MueedDatabaseService {
   DatabaseService() {
     _authService = _getIt.get<AuthService>();
     _setupCollectionReference();

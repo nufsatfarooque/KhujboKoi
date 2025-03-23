@@ -17,9 +17,21 @@ class RestaurantReview extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Colors.green,
         elevation: 0,
         centerTitle: true,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.green.shade700, // Starting color
+                Colors.green.shade300, // Ending color
+              ],
+            ),
+          ),
+        ),
+        backgroundColor: Colors.transparent, // Make the AppBar background transparent to show the gradient
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -138,7 +150,7 @@ class RestaurantReview extends StatelessWidget {
                               children: [
                                 Text(
                                   restaurantName,
-                                  style:  TextStyle(
+                                  style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.green.shade900,

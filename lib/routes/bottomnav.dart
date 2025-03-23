@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:khujbokoi/login-signup/profile.dart';
 import 'package:khujbokoi/reviews/reviews.dart';
 import '../screen/notice.dart';
-import '../login-signup/sign_up_screen.dart';
+import '../login-signup/settings.dart';
 import '../screen/home.dart';
 
 class BottomNav extends StatefulWidget {
@@ -48,7 +49,7 @@ class _BottomNavState extends State<BottomNav> {
           ),
           ReviewsPage(),
           NoticeBoardTabs(),
-          SignUpScreen()
+          ProfilePage()
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

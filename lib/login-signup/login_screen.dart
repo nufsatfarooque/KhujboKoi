@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:khujbokoi/core/firestore.dart';
 import 'package:khujbokoi/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -85,6 +87,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
+                    // Forgot Password: show dialog with two options.
+                    TextButton(
+                      onPressed: _forgotPassword,
+                      child: const Text(
+                        "Forgot Password?",
+                        style: TextStyle(color: Colors.green),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    
                     const Text(
                       "OR",
                       textAlign: TextAlign.center,
@@ -180,6 +192,167 @@ class _LoginScreenState extends State<LoginScreen> {
      
 
   }
+  Future<void> _forgotPassword() async {
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Reset Password"),
+          
+          actions: [
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _forgotPasswordWithEmail();
+                },
+                child: const Text("Reset via Email"),
+              ),
+            ),
+           
+          ],
+        );
+      },
+    );
+  }
+  Future<void> _forgotPasswordWithEmail() async {
+    TextEditingController forgotEmailController = TextEditingController();
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Reset Password via Email"),
+          content: TextField(
+            controller: forgotEmailController,
+            decoration: const InputDecoration(
+              labelText: "Enter your email",
+              hintText: "example@gmail.com",
+            ),
+            keyboardType: TextInputType.emailAddress,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                String email = forgotEmailController.text.trim();
+                if (email.isEmpty) {
+                  _showErrorDialog("Please enter a valid email address.");
+                  return;
+                }
+                // Check Firestore for account existence.
+                var querySnapshot = await firestoreDb
+                    .collection("users")
+                    .where("email", isEqualTo: email)
+                    .get();
+                if (querySnapshot.docs.isEmpty) {
+                  Navigator.pop(context);
+                  _showErrorDialog("No account found for the email: $email");
+                  return;
+                }
+                try {
+                  await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+                  Navigator.pop(context);
+                  _showInfoDialog(
+                    "Password Reset Email Sent",
+                    "A reset link has been sent to $email. Please check your inbox (and spam folder).",
+                  );
+                } on FirebaseAuthException catch (e) {
+                  Navigator.pop(context);
+                  _showErrorDialog("Error: ${e.message}");
+                } catch (e) {
+                  Navigator.pop(context);
+                  _showErrorDialog("Error sending password reset email: $e");
+                }
+              },
+              child: const Text("Submit"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  void _showEmailNotVerifiedDialog(User user) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Email Not Verified"),
+          content: Text(
+            "Your email (${user.email}) is not verified. Would you like us to resend the verification link?",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pop(context);
+              },
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await _resendVerificationEmail(user);
+              },
+              child: const Text("Resend"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Resend verification email.
+  Future<void> _resendVerificationEmail(User user) async {
+    try {
+      await user.sendEmailVerification();
+      _showInfoDialog(
+        "Verification Email Sent",
+        "A verification link has been resent to ${user.email}. Please check your inbox.",
+      );
+      await FirebaseAuth.instance.signOut();
+    } catch (e) {
+      _showErrorDialog("Error sending verification email: $e");
+    }
+  }
+
+  // Displays an error dialog.
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Error"),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  void _showInfoDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 
@@ -192,3 +365,4 @@ class _LoginScreenState extends State<LoginScreen> {
  //               )),
  //       
  //     );
+ 

@@ -238,6 +238,18 @@ Future<String> getUIDbyUserName(String userName) async {
   }
 }
 
+//Given a unique email, retuns its UID
+Future<String>getUIDbyEmail(String email) async {
+  QuerySnapshot userSnapshot = await userInfo.where('email', isEqualTo: email).get();
+
+  if(userSnapshot.docs.isNotEmpty){
+    return userSnapshot.docs[0].id;
+  }
+  else{
+    throw Exception("No user found with the email: $email");
+  }
+
+}
   //return username given an email
   Future<String> getUserNamebyID(User? curUser) async{
     try{
@@ -268,6 +280,17 @@ Future<String> getUIDbyUserName(String userName) async {
     catch(e)
     {
       throw Exception("User with this username doesn't exist : $e");
+    }
+  }
+
+    Future<QuerySnapshot> getUserbyEmail(String email) async {
+    try{
+      QuerySnapshot userSnapshot = await userInfo.where('email',isEqualTo: email).get();
+      return userSnapshot;
+    }
+    catch(e)
+    {
+      throw Exception("User with this email doesn't exist: ");
     }
   }
 
@@ -539,5 +562,23 @@ Stream<Map<String, int>> getPostsWeeklyReport() {
         
     }
    }
+
+
+   Future<void> addProcessedFieldToListings() async {
+  final collectionRef = FirebaseFirestore.instance.collection('listings');
+  final snapshot = await collectionRef.get();
+
+  // Create a batch write to update documents
+  WriteBatch batch = FirebaseFirestore.instance.batch();
+
+  // Loop through the documents to update each with 'processed': false
+  for (QueryDocumentSnapshot doc in snapshot.docs) {
+    batch.update(doc.reference, {'processed': false});
+  }
+
+  // Commit the batch
+  await batch.commit();
+  print('Updated ${snapshot.docs.length} documents with processed: false');
+}
   }
 

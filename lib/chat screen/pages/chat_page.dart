@@ -1,8 +1,7 @@
-import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
-import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 //import 'package:flutter_projects/services/storage_service.dart';
 import 'package:get_it/get_it.dart';
@@ -12,7 +11,7 @@ import 'package:khujbokoi/chat%20screen/models/user_profile.dart';
 import 'package:khujbokoi/chat%20screen/services/database_service.dart';
 import 'package:khujbokoi/chat%20screen/utils.dart';
 import 'package:khujbokoi/services/auth_service.dart';
-
+import  'package:khujbokoi/services/database.dart';
 class ChatPage extends StatefulWidget {
   final UserProfile chatUser;
   const ChatPage({
@@ -25,8 +24,8 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  final GetIt _getIt = GetIt.instance;
-  late DatabaseService _databaseService;
+  late final GetIt _getIt = GetIt.instance;
+  late MueedDatabaseService _databaseService;
   late AuthService _authService;
   //late MediaService _mediaService;
   //late StorageService _storageService;
@@ -34,14 +33,24 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    _authService = _getIt.get<AuthService>();
+   /* _authService = _getIt.get<AuthService>();
    // _storageService = _getIt.get<StorageService>();
     //_mediaService = _getIt.get<MediaService>();
-    _databaseService = _getIt.get<DatabaseService>();
+    _databaseService = _getIt.get<MueedDatabaseService>();
     currentUser = ChatUser(
         id: _authService.user!.uid, firstName: _authService.user!.displayName);
     otherUser =
         ChatUser(id: widget.chatUser.uid, firstName: widget.chatUser.name);
+    */
+    DatabaseService database = DatabaseService();
+     currentUser?.firstName = FirebaseAuth.instance.currentUser as String?;
+
+     if (currentUser != null && currentUser?.firstName != null) {
+       var currentuserUid = database.getUIDbyUserName(currentUser!.firstName!);
+     }
+
+     
+
   }
 
   @override

@@ -127,13 +127,13 @@ class _HouseReviewState extends State<HouseSpecificReview> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add your action here
-        },
-        backgroundColor: Colors.green,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () {
+      //     // Add your action here
+      //   },
+      //   backgroundColor: Colors.green,
+      //   child: const Icon(Icons.add, color: Colors.white),
+      // ),
     );
   }
 
@@ -239,7 +239,7 @@ class _HouseReviewState extends State<HouseSpecificReview> {
               color: Colors.white,
             ),
           )
-              : const Text('Submit Review', style: TextStyle(fontSize: 16)),
+              : const Text('Submit Review', style: TextStyle(fontSize: 16, color: Colors.white)),
         ),
         const Divider(thickness: 1.0),
         const SizedBox(height: 16),

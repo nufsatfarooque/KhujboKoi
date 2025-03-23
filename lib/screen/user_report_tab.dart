@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:khujbokoi/routes/app_routes.dart';
 import 'package:khujbokoi/services/database.dart';
 
 class UserReportTab extends StatefulWidget {
@@ -41,7 +42,10 @@ class _UserReportTabState extends State<UserReportTab> {
           
             final comment = report['comment'];
             final reportId = report.id;
-            final status = "pending";
+            final reportData = report.data() as Map<String, dynamic>;
+            final status = reportData.containsKey('status')
+                ? reportData['status']
+                : 'pending';
              return FutureBuilder<QuerySnapshot>(
                   future: database.getUserbyUserName(reportedBy),
                   builder: (context, userSnapshot) {
@@ -209,16 +213,17 @@ class _UserReportTabState extends State<UserReportTab> {
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
                                 ElevatedButton(
-                                  onPressed: () => {
-                                    if (status == "pending")
-                                      showDialog(
-                                        context: context,
-                                        builder: (context) =>
-                                            AdminResponseToReporter(
-                                          report: report,
-                                          delete_post: true,
-                                        ),
-                                      )
+                                  onPressed: () async => {
+                                    if (status == "pending"){
+                                      await DatabaseService().reportUser.doc(reportId).update({
+                                        'status': "resolved",
+                                      }),
+                                      Navigator.pushNamed(
+                                        context, 
+                                        AppRoutes.manageUsersRoute,
+                                        arguments:reportedUser,
+                                        )
+                                    }
                                   },
                                   style: ElevatedButton.styleFrom(
                                       backgroundColor:
@@ -231,7 +236,7 @@ class _UserReportTabState extends State<UserReportTab> {
                                         borderRadius: BorderRadius.circular(10),
                                       )),
                                   child: const Text(
-                                    'Delete Post',
+                                    'Take Action',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,
@@ -333,7 +338,7 @@ class AdminResponseToReporter extends StatelessWidget {
                 return;
               }
 
-              await DatabaseService().reportPost.doc(report.id).update({
+              await DatabaseService().reportUser.doc(report.id).update({
                 'response': _replyController.text,
                 'status': "resolved",
               });
@@ -351,15 +356,7 @@ class AdminResponseToReporter extends StatelessWidget {
               // ignore: use_build_context_synchronously
               Navigator.pop(context);
               //init AdminResponseToAccused and pop this form
-              if (delete_post) {
-                showDialog(
-                  // ignore: use_build_context_synchronously
-                  context: context,
-                  builder: (context) => AdminResponseToAccused(
-                    report: report,
-                  ),
-                );
-              }
+             
             },
             child: Text("Send Response"))
       ],
