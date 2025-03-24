@@ -156,7 +156,6 @@ class _AddHouseState extends State<AddHouse> {
           _bedrooms = 0;
           _bathrooms = 0;
         });
-
         // Navigate to HomeOwnerScreen
         Navigator.pushReplacement(
           context,
@@ -436,7 +435,6 @@ class _AddHouseState extends State<AddHouse> {
                                             "Lng: ${_selectedLocation!.longitude.toStringAsFixed(4)}",
                                       ),
                                     ),
-
                                 ],
                               ),
                             ),
