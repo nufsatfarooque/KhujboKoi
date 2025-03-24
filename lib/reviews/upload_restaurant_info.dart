@@ -5,8 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:animate_do/animate_do.dart';
-// For vector icons
-// For better image handling
+import 'package:flutter_svg/flutter_svg.dart'; // For vector icons
+import 'package:cached_network_image/cached_network_image.dart'; // For better image handling
 
 class UploadRestaurantInfoScreen extends StatefulWidget {
   const UploadRestaurantInfoScreen({super.key});

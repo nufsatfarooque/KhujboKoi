@@ -1,4 +1,6 @@
 // AppRoutes.dart
+import 'dart:core'; // Ensure this import is present for core Dart types like String
+
 import 'package:flutter/material.dart';
 import 'package:khujbokoi/reviews/house_review.dart';
 import 'package:khujbokoi/reviews/restaurant_review.dart';
